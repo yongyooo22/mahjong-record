@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Clock, Crown, Database, Dices, HardDrive, PenLine, Trophy, UserRound, Users } from 'lucide-react';
+import { Bell, ChevronRight, Clock, Coins, Crown, Database, Dices, Flame, HardDrive, PenLine, Sparkles, Trophy, UserRound } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -13,7 +13,7 @@ import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
-import { computeResults } from '../lib/scoring';
+import { computeResults, formatPoints } from '../lib/scoring';
 import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
 import { useData, useMemberMap } from '../state/DataProvider';
 import app from '../styles/App.module.css';
@@ -127,30 +127,25 @@ export function HomePage() {
                 sub={<Delta delta={summary.games.delta} digits={0} />}
               />
               <StatCard
-                icon={<Users size={18} color="#075844" />}
+                icon={<Flame size={18} color="#075844" />}
                 tone="#e4efe9"
-                label="참여 멤버"
-                value={
-                  <>
-                    {summary.players.current ?? 0}
-                    <small>명</small>
-                  </>
-                }
-                sub={<Delta delta={summary.players.delta} digits={0} />}
+                label="최다 참여"
+                value={<NameStat name={nameOf(summary.mostActive?.memberId)} />}
+                sub={summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
+              />
+              <StatCard
+                icon={<Coins size={18} color="#075844" />}
+                tone="#e4efe9"
+                label="평균 우마 1위"
+                value={<NameStat name={nameOf(summary.bestAverage?.memberId)} />}
+                sub={summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
               />
               <StatCard
                 icon={<Crown size={18} color="#b9861f" />}
                 tone="#fbf0d0"
                 label="1위 최다"
                 value={<NameStat name={nameOf(summary.topFirst?.memberId)} />}
-                sub={summary.topFirst ? `${summary.topFirst.count}회 1위` : '아직 없음'}
-              />
-              <StatCard
-                icon={<span style={{ fontFamily: 'serif', fontWeight: 800, color: '#C83D32', fontSize: 16, lineHeight: 1 }}>中</span>}
-                tone="#fbeae8"
-                label="라스 최다"
-                value={<NameStat name={nameOf(summary.topLast?.memberId)} />}
-                sub={summary.topLast ? `${summary.topLast.count}회 라스` : '아직 없음'}
+                sub={summary.topFirst ? `${summary.topFirst.value}회 1위` : '아직 없음'}
               />
             </StatGrid>
           )}
@@ -203,8 +198,14 @@ export function HomePage() {
                     {formatWeekday(g.playedAt)}
                   </div>
                   <div className={s.recentBody}>
-                    <div className={s.recentTitle}>{g.title || '대국'}</div>
-                    {g.memo && <div className={s.recentMemo}>{g.memo}</div>}
+                    <div className={s.recentTitle}>
+                      {g.place || '장소 미정'}
+                      {g.yakumans.length > 0 && (
+                        <span className={s.recentYakuman}>
+                          <Sparkles size={11} /> 역만
+                        </span>
+                      )}
+                    </div>
                     <div className={s.recentPlayers}>
                       {ordered.map((r) => (
                         <span key={r.index} className={s.recentPlayer}>

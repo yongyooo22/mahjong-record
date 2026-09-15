@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { SEED_CREATED_AT, SEED_MEMBERS } from './seedMembers';
+import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from './seedMembers';
 import type { Game, Member } from '../../src/lib/types';
 
 export const MEMBERS_KEY = 'mahjong:members';
@@ -87,16 +87,18 @@ export function getStore(): Store | null {
   return cached;
 }
 
-/** 멤버 목록을 읽고, 비어 있으면 샘플 멤버를 한 번만 시드합니다. */
+function seedMembers(): Member[] {
+  return SEED_MEMBERS.map((m) => ({ ...m, avatar: null, active: true, createdAt: SEED_CREATED_AT }));
+}
+
+/**
+ * 멤버 목록을 읽고, 비어 있으면 초기 멤버를 한 번만 시드합니다.
+ * 예전 초기 멤버가 손대지 않은 채 남아 있고 대국 기록도 없으면 새 초기 멤버로 교체합니다.
+ */
 export async function loadMembers(store: Store): Promise<Member[]> {
   const existing = await store.getMembers();
-  if (existing) return existing;
-  const seeded: Member[] = SEED_MEMBERS.map((m) => ({
-    ...m,
-    avatar: null,
-    active: true,
-    createdAt: SEED_CREATED_AT,
-  }));
+  if (existing && !(isUntouchedLegacySeed(existing) && (await store.getGames()).length === 0)) return existing;
+  const seeded = seedMembers();
   await store.setMembers(seeded);
   return seeded;
 }

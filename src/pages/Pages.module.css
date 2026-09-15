@@ -97,16 +97,31 @@
   text-align: right;
 }
 
-.memo {
+.gameTitleIcon {
+  color: var(--text-faint);
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+.yakumanLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   margin-top: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--ivory);
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
+  color: var(--gold);
+}
+
+.yakumanChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: #7a5a12;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 /* ---- 상세 ---- */

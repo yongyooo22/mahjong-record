@@ -1,4 +1,4 @@
-import { FileText, PenLine } from 'lucide-react';
+import { FileText, MapPin, PenLine, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -30,7 +30,8 @@ export function GameCard({ game }: { game: Game }) {
       <Link to={`/games/${game.id}`}>
         <div className={s.gameHead}>
           <div className={s.gameTitle}>
-            {game.title || '대국'}
+            <MapPin size={14} className={s.gameTitleIcon} />
+            {game.place || '장소 미정'}
             <span className={s.typeTag}>{GAME_TYPE_LABEL[game.gameType]}</span>
           </div>
           <div className={s.gameMeta}>
@@ -50,7 +51,16 @@ export function GameCard({ game }: { game: Game }) {
             </div>
           );
         })}
-        {game.memo && <div className={s.memo}>{game.memo}</div>}
+        {game.yakumans.length > 0 && (
+          <div className={s.yakumanLine}>
+            <Sparkles size={14} />
+            {game.yakumans.map((y, i) => (
+              <span key={i} className={s.yakumanChip}>
+                {memberMap.get(y.playerId)?.name ?? '?'} · {y.name}
+              </span>
+            ))}
+          </div>
+        )}
       </Link>
     </Card>
   );

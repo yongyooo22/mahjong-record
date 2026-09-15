@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -52,7 +52,7 @@ export function GameDetailPage() {
       <PageHeader title="대국 상세" back>
         {game && (
           <div className={s.detailHero}>
-            <div className={s.detailTitle}>{game.title || '대국'}</div>
+            <div className={s.detailTitle}>{game.place || '장소 미정'}</div>
             <div className={s.detailMeta}>
               {formatDateTime(game.playedAt)} · {GAME_TYPE_LABEL[game.gameType]} · {game.playerCount}인
             </div>
@@ -87,12 +87,19 @@ export function GameDetailPage() {
               })}
             </Card>
 
-            {game.memo && (
+            {game.yakumans.length > 0 && (
               <Card>
-                <SectionHeader title="오늘의 한마디" />
-                <div className={s.memo} style={{ marginTop: 0 }}>
-                  {game.memo}
-                </div>
+                <SectionHeader icon={<Sparkles size={18} />} title="역만" />
+                {game.yakumans.map((y, i) => {
+                  const member = memberMap.get(y.playerId);
+                  return (
+                    <div key={i} className={s.detailRow}>
+                      {member && <Avatar member={member} size={36} />}
+                      <span className={s.detailName}>{member?.name ?? '(삭제된 멤버)'}</span>
+                      <span className={s.yakumanChip}>{y.name}</span>
+                    </div>
+                  );
+                })}
               </Card>
             )}
 

@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowLeftRight, Calendar, Check, Clock, FileText, LayoutGrid, Users, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeftRight, Calendar, Check, Clock, LayoutGrid, MapPin, Plus, Sparkles, Trash2, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -10,22 +10,37 @@ import { PageHeader } from '../components/PageHeader';
 import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
 import { useToast } from '../components/Toast';
+import { DEFAULT_PLACES, mergePlaces, PLACE_MAX_LENGTH, readCustomPlaces, saveCustomPlace } from '../config/places';
 import { DEFAULT_RULES, GAME_TYPE_LABEL, type GameType } from '../config/rules';
+import { YAKUMAN_MAX_PER_GAME, YAKUMAN_NAME_MAX_LENGTH, YAKUMAN_NAMES, YAKUMAN_OTHER } from '../config/yakuman';
 import { fromDateTimeInputs, toDateInput, toTimeInput } from '../lib/format';
 import { computeResults, formatScore, scoreTotalDiff, tieGroups } from '../lib/scoring';
-import type { NewGame } from '../lib/types';
+import { sortGamesDesc } from '../lib/stats';
+import type { NewGame, Yakuman } from '../lib/types';
 import { useData, useMemberMap } from '../state/DataProvider';
 import ui from '../components/ui.module.css';
 import app from '../styles/App.module.css';
 import s from './Record.module.css';
 
-const MEMO_MAX = 200;
 const PLAYER_COUNT = 4;
+/** 장소 선택에서 "새 장소 추가" 를 뜻하는 특수 값 */
+const NEW_PLACE = '__new__';
 
 interface Slot {
   memberId: string;
   /** 입력 문자열 (빈 문자열 = 미입력) */
   score: string;
+}
+
+/** 역만 입력 행. name 이 '기타' 면 customName 을 씁니다. */
+interface YakumanRow {
+  playerId: string;
+  name: string;
+  customName: string;
+}
+
+function yakumanName(row: YakumanRow): string {
+  return (row.name === YAKUMAN_OTHER ? row.customName : row.name).trim().slice(0, YAKUMAN_NAME_MAX_LENGTH);
 }
 
 function parseScore(raw: string): number | null {
@@ -37,15 +52,22 @@ function parseScore(raw: string): number | null {
 export function RecordPage() {
   const navigate = useNavigate();
   const toast = useToast();
-  const { status, members, addGame } = useData();
+  const { status, members, games, addGame } = useData();
   const memberMap = useMemberMap();
   const activeMembers = useMemo(() => members.filter((m) => m.active), [members]);
 
   const [gameType, setGameType] = useState<GameType>('hanchan');
   const [date, setDate] = useState(() => toDateInput(new Date()));
   const [time, setTime] = useState(() => toTimeInput(new Date()));
-  const [title, setTitle] = useState('');
-  const [memo, setMemo] = useState('');
+
+  // 장소: 기본 목록 + 기록에 쓰인 장소 + 이 기기에서 추가한 장소
+  const [customPlaces, setCustomPlaces] = useState<string[]>(() => readCustomPlaces());
+  const places = useMemo(() => mergePlaces(games.map((g) => g.place), customPlaces), [games, customPlaces]);
+  const [place, setPlace] = useState('');
+  const [placeDraft, setPlaceDraft] = useState('');
+  const [addingPlace, setAddingPlace] = useState(false);
+
+  const [yakumans, setYakumans] = useState<YakumanRow[]>([]);
   const [slots, setSlots] = useState<Slot[]>(() => Array.from({ length: PLAYER_COUNT }, () => ({ memberId: '', score: '' })));
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -59,6 +81,47 @@ export function RecordPage() {
       return prev.map((p, i) => ({ ...p, memberId: activeMembers[i]?.id ?? '' }));
     });
   }, [status, activeMembers]);
+
+  // 장소 기본값: 가장 최근 대국의 장소, 없으면 기본 목록의 첫 번째
+  useEffect(() => {
+    if (status !== 'ready') return;
+    setPlace((prev) => {
+      if (prev) return prev;
+      const recent = sortGamesDesc(games).find((g) => g.place.trim())?.place;
+      return recent ?? DEFAULT_PLACES[0] ?? '';
+    });
+  }, [status, games]);
+
+  const onPlaceSelect = (value: string) => {
+    if (value === NEW_PLACE) {
+      setAddingPlace(true);
+      setPlaceDraft('');
+      return;
+    }
+    setPlace(value);
+  };
+
+  const commitNewPlace = () => {
+    const v = placeDraft.trim().slice(0, PLACE_MAX_LENGTH);
+    if (!v) {
+      setAddingPlace(false);
+      return;
+    }
+    if (!places.includes(v)) {
+      saveCustomPlace(v);
+      setCustomPlaces(readCustomPlaces());
+    }
+    setPlace(v);
+    setAddingPlace(false);
+    setPlaceDraft('');
+  };
+
+  // 참가자 선택이 바뀌어 참가자가 아니게 된 사람의 역만 행은 사람 선택을 비웁니다.
+  const selectedIds = slots.map((p) => p.memberId).filter(Boolean);
+  const addYakuman = () => setYakumans((prev) => (prev.length >= YAKUMAN_MAX_PER_GAME ? prev : [...prev, { playerId: selectedIds[0] ?? '', name: YAKUMAN_NAMES[0], customName: '' }]));
+  const updateYakuman = (i: number, patch: Partial<YakumanRow>) => setYakumans((prev) => prev.map((y, idx) => (idx === i ? { ...y, ...patch } : y)));
+  const removeYakuman = (i: number) => setYakumans((prev) => prev.filter((_, idx) => idx !== i));
+  const yakumanIncomplete = yakumans.some((y) => !selectedIds.includes(y.playerId) || !yakumanName(y));
 
   const rules = DEFAULT_RULES;
   const scores = slots.map((p) => parseScore(p.score));
@@ -77,7 +140,7 @@ export function RecordPage() {
   const total = useMemo(() => (allScored ? scoreTotalDiff(scores as number[], rules, PLAYER_COUNT) : null), [allScored, scores.join(','), rules]); // eslint-disable-line react-hooks/exhaustive-deps
   const enteredSum = scores.reduce<number>((a, v) => a + (v ?? 0), 0);
 
-  const canSave = status === 'ready' && allSelected && allScored && !duplicate && !hasNotHundred && !saving;
+  const canSave = status === 'ready' && allSelected && allScored && !duplicate && !hasNotHundred && !yakumanIncomplete && !saving;
 
   const updateSlot = (i: number, patch: Partial<Slot>) =>
     setSlots((prev) => prev.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
@@ -92,17 +155,18 @@ export function RecordPage() {
   const buildGame = useCallback((): NewGame | null => {
     const playedAt = fromDateTimeInputs(date, time);
     if (!playedAt) return null;
+    const yakumanList: Yakuman[] = yakumans.map((y) => ({ playerId: y.playerId, name: yakumanName(y) }));
     return {
       playedAt,
-      title: title.trim().slice(0, 60),
+      place: place.trim().slice(0, PLACE_MAX_LENGTH),
       playerCount: PLAYER_COUNT,
       gameType,
       playerIds: slots.map((p) => p.memberId),
       scores: scores as number[],
-      memo: memo.trim().slice(0, MEMO_MAX),
+      yakumans: yakumanList,
       rules: { ...rules, uma: [...rules.uma] as [number, number, number, number] },
     };
-  }, [date, time, title, gameType, slots, scores, memo, rules]);
+  }, [date, time, place, gameType, slots, scores, yakumans, rules]);
 
   const doSave = async () => {
     const game = buildGame();
@@ -185,19 +249,51 @@ export function RecordPage() {
           </div>
 
           <Card className={s.titleCard}>
-            <label className={ui.field}>
+            <div className={ui.field}>
               <span className={ui.label}>
-                대국 제목 <span className={ui.labelOptional}>(선택)</span>
+                <MapPin size={15} /> 장소
               </span>
-              <input
-                className={ui.input}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="예: 저녁 한판, 퇴근 후 마작"
-                maxLength={60}
-                autoComplete="off"
-              />
-            </label>
+              {addingPlace ? (
+                <div className={s.placeAdd}>
+                  <input
+                    className={ui.input}
+                    value={placeDraft}
+                    onChange={(e) => setPlaceDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitNewPlace();
+                      }
+                    }}
+                    placeholder="새 장소 이름"
+                    maxLength={PLACE_MAX_LENGTH}
+                    autoFocus
+                    autoComplete="off"
+                    aria-label="새 장소 이름"
+                  />
+                  <Button type="button" variant="primary" size="sm" onClick={commitNewPlace} disabled={!placeDraft.trim()}>
+                    추가
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setAddingPlace(false)}>
+                    취소
+                  </Button>
+                </div>
+              ) : (
+                <div className={s.placeRow}>
+                  <select className={[ui.input, s.placeSelect].join(' ')} value={place} onChange={(e) => onPlaceSelect(e.target.value)} aria-label="대국 장소">
+                    {places.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                    <option value={NEW_PLACE}>＋ 새 장소 추가…</option>
+                  </select>
+                  <Button type="button" variant="outline" size="sm" icon={<Plus size={16} />} onClick={() => onPlaceSelect(NEW_PLACE)} aria-label="새 장소 추가">
+                    추가
+                  </Button>
+                </div>
+              )}
+            </div>
           </Card>
 
           {activeMembers.length < PLAYER_COUNT && status === 'ready' && (
@@ -313,22 +409,64 @@ export function RecordPage() {
           )}
 
           <Card className={s.titleCard}>
-            <label className={ui.field}>
+            <div className={ui.field}>
               <span className={ui.label}>
-                <FileText size={15} /> 오늘의 한마디 <span className={ui.labelOptional}>(선택)</span>
+                <Sparkles size={15} /> 역만 <span className={ui.labelOptional}>(있을 때만)</span>
               </span>
-              <textarea
-                className={[ui.input, ui.textarea].join(' ')}
-                value={memo}
-                onChange={(e) => setMemo(e.target.value.slice(0, MEMO_MAX))}
-                placeholder="오늘은 어땠나요? 🙂"
-                maxLength={MEMO_MAX}
-                rows={3}
-              />
-              <div className={s.memoCount}>
-                {memo.length}/{MEMO_MAX}
-              </div>
-            </label>
+              {yakumans.length === 0 && <span className={ui.help}>이번 대국에서 역만이 나왔다면 누가 무슨 역만을 냈는지 남겨 두세요.</span>}
+              {yakumans.map((y, i) => (
+                <div key={i} className={s.yakumanRow}>
+                  <select
+                    className={[ui.input, s.yakumanSelect].join(' ')}
+                    value={y.playerId}
+                    onChange={(e) => updateYakuman(i, { playerId: e.target.value })}
+                    aria-label={`${i + 1}번 역만을 낸 사람`}
+                  >
+                    <option value="">누가</option>
+                    {selectedIds.map((id) => (
+                      <option key={id} value={id}>
+                        {memberMap.get(id)?.name ?? id}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className={[ui.input, s.yakumanSelect].join(' ')}
+                    value={y.name}
+                    onChange={(e) => updateYakuman(i, { name: e.target.value })}
+                    aria-label={`${i + 1}번 역만 이름`}
+                  >
+                    {YAKUMAN_NAMES.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                    <option value={YAKUMAN_OTHER}>{YAKUMAN_OTHER} (직접 입력)</option>
+                  </select>
+                  <button type="button" className={s.yakumanRemove} onClick={() => removeYakuman(i)} aria-label="역만 삭제">
+                    <Trash2 size={16} />
+                  </button>
+                  {y.name === YAKUMAN_OTHER && (
+                    <input
+                      className={[ui.input, s.yakumanCustom].join(' ')}
+                      value={y.customName}
+                      onChange={(e) => updateYakuman(i, { customName: e.target.value })}
+                      placeholder="역만 이름을 직접 입력"
+                      maxLength={YAKUMAN_NAME_MAX_LENGTH}
+                      autoComplete="off"
+                      aria-label={`${i + 1}번 역만 이름 직접 입력`}
+                    />
+                  )}
+                </div>
+              ))}
+              {yakumanIncomplete && (
+                <span className={[ui.help, ui.helpError].join(' ')}>역만을 낸 사람과 역만 이름을 모두 골라 주세요.</span>
+              )}
+              {yakumans.length < YAKUMAN_MAX_PER_GAME && (
+                <Button type="button" variant="outline" size="sm" icon={<Plus size={16} />} onClick={addYakuman} disabled={selectedIds.length === 0} className={s.yakumanAdd}>
+                  역만 추가
+                </Button>
+              )}
+            </div>
           </Card>
 
           {saveError && (

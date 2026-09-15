@@ -47,12 +47,16 @@ export interface MemberStats {
   totalPoints: number;
   /** 평균 순위 (대국이 없으면 null) */
   avgRank: number | null;
+  /** 대국당 평균 우마(정산 점수) (대국이 없으면 null) */
+  avgPoints: number | null;
   rankCounts: [number, number, number, number];
   firstRate: number;
+  /** 이 멤버가 낸 역만 수 */
+  yakumanCount: number;
 }
 
 function emptyStats(memberId: string): MemberStats {
-  return { memberId, games: 0, totalPoints: 0, avgRank: null, rankCounts: [0, 0, 0, 0], firstRate: 0 };
+  return { memberId, games: 0, totalPoints: 0, avgRank: null, avgPoints: null, rankCounts: [0, 0, 0, 0], firstRate: 0, yakumanCount: 0 };
 }
 
 /** 대국 목록으로 멤버별 통계를 계산합니다. */
@@ -81,11 +85,15 @@ export function computeMemberStats(games: Game[], memberIds?: string[]): Map<str
       if (r.rank >= 1 && r.rank <= 4) s.rankCounts[r.rank - 1] += 1;
       acc.get(id)!.rankSum += r.rank;
     });
+    for (const y of game.yakumans ?? []) {
+      if (game.playerIds.includes(y.playerId)) ensure(y.playerId).yakumanCount += 1;
+    }
   }
 
   for (const [id, s] of map) {
     if (s.games > 0) {
       s.avgRank = Math.round((acc.get(id)!.rankSum / s.games) * 100) / 100;
+      s.avgPoints = round1(s.totalPoints / s.games);
       s.firstRate = Math.round((s.rankCounts[0] / s.games) * 1000) / 10;
     }
   }
@@ -135,11 +143,14 @@ function delta(current: number | null, previous: number | null): StatDelta {
 
 export interface MonthlySummary {
   month: string;
+  /** 참여 횟수 */
+  games: StatDelta;
   avgRank: StatDelta;
+  /** 대국당 평균 우마 */
+  avgPoints: StatDelta;
   firstCount: StatDelta;
   lastCount: StatDelta;
   totalPoints: StatDelta;
-  games: number;
 }
 
 /** 특정 멤버의 이번 달 요약 (지난달 대비 증감 포함) */
@@ -149,54 +160,60 @@ export function computeMonthlySummary(games: Game[], memberId: string, month: st
   const prevPlayed = prev.games > 0;
   return {
     month,
-    games: cur.games,
+    games: delta(cur.games, prevPlayed ? prev.games : null),
     avgRank: delta(cur.avgRank, prevPlayed ? prev.avgRank : null),
+    avgPoints: delta(cur.avgPoints, prevPlayed ? prev.avgPoints : null),
     firstCount: delta(cur.rankCounts[0], prevPlayed ? prev.rankCounts[0] : null),
     lastCount: delta(cur.rankCounts[3], prevPlayed ? prev.rankCounts[3] : null),
     totalPoints: delta(cur.totalPoints, prevPlayed ? prev.totalPoints : null),
   };
 }
 
+export interface TopMember {
+  memberId: string;
+  /** 지표 값 (참여 수·평균 우마·1위 횟수) */
+  value: number;
+}
+
 export interface GroupSummary {
   month: string;
   /** 이번 달 대국 수 (지난달 대비) */
   games: StatDelta;
-  /** 이번 달에 한 번이라도 참여한 멤버 수 (지난달 대비) */
-  players: StatDelta;
-  /** 1위를 가장 많이 한 멤버 (없으면 null) */
-  topFirst: { memberId: string; count: number } | null;
-  /** 4위(라스)를 가장 많이 한 멤버 (없으면 null) */
-  topLast: { memberId: string; count: number } | null;
+  /** 가장 많이 참여한 멤버 (value = 참여 횟수) */
+  mostActive: TopMember | null;
+  /** 대국당 평균 우마가 가장 높은 멤버 (value = 평균 우마) */
+  bestAverage: TopMember | null;
+  /** 1위를 가장 많이 한 멤버 (value = 1위 횟수) */
+  topFirst: TopMember | null;
 }
 
-function topByRank(stats: Map<string, MemberStats>, rankIndex: 0 | 3): GroupSummary['topFirst'] {
-  let best: { memberId: string; count: number; points: number } | null = null;
+/** 지표가 가장 큰 멤버. 같으면 tieBreak 가 큰 쪽 */
+function topMember(stats: Map<string, MemberStats>, metric: (s: MemberStats) => number | null, tieBreak: (s: MemberStats) => number): TopMember | null {
+  let best: { memberId: string; value: number; tie: number } | null = null;
   for (const [memberId, s] of stats) {
-    const count = s.rankCounts[rankIndex];
-    if (count === 0) continue;
-    // 같은 횟수면 1위 최다는 누적 우마가 높은 쪽, 라스 최다는 낮은 쪽
-    const better =
-      !best ||
-      count > best.count ||
-      (count === best.count && (rankIndex === 0 ? s.totalPoints > best.points : s.totalPoints < best.points));
-    if (better) best = { memberId, count, points: s.totalPoints };
+    const value = metric(s);
+    if (value === null || s.games === 0) continue;
+    const tie = tieBreak(s);
+    if (!best || value > best.value || (value === best.value && tie > best.tie)) best = { memberId, value, tie };
   }
-  return best ? { memberId: best.memberId, count: best.count } : null;
+  return best ? { memberId: best.memberId, value: best.value } : null;
 }
 
 /** 모임 전체의 이번 달 요약 — 누가 보든 같은 값 (홈 화면용) */
 export function computeGroupSummary(games: Game[], month: string): GroupSummary {
   const cur = gamesInMonth(games, month);
   const prev = gamesInMonth(games, previousMonthKey(month));
-  const prevPlayed = prev.length > 0;
   const stats = computeMemberStats(cur);
-  const countPlayers = (list: Game[]) => new Set(list.flatMap((g) => g.playerIds)).size;
   return {
     month,
-    games: delta(cur.length, prevPlayed ? prev.length : null),
-    players: delta(countPlayers(cur), prevPlayed ? countPlayers(prev) : null),
-    topFirst: topByRank(stats, 0),
-    topLast: topByRank(stats, 3),
+    games: delta(cur.length, prev.length > 0 ? prev.length : null),
+    mostActive: topMember(stats, (s) => s.games, (s) => s.totalPoints),
+    bestAverage: topMember(stats, (s) => s.avgPoints, (s) => s.games),
+    topFirst: topMember(
+      stats,
+      (s) => (s.rankCounts[0] > 0 ? s.rankCounts[0] : null),
+      (s) => s.avgPoints ?? 0,
+    ),
   };
 }
 

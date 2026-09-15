@@ -21,22 +21,22 @@ const members: Member[] = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
   createdAt: '2025-01-01T00:00:00.000Z',
 }));
 
-function game(id: string, playedAt: string, playerIds: string[], scores: number[]): Game {
+function game(id: string, playedAt: string, playerIds: string[], scores: number[], yakumans: Game['yakumans'] = []): Game {
   return {
     id,
     playedAt,
-    title: '',
+    place: '',
     playerCount: 4,
     gameType: 'hanchan',
     playerIds,
     scores,
-    memo: '',
+    yakumans,
     createdAt: playedAt,
     rules: DEFAULT_RULES,
   };
 }
 
-const g1 = game('g1', '2025-03-08T19:30:00', ['a', 'b', 'c', 'd'], [38200, 27600, 21400, 12800]);
+const g1 = game('g1', '2025-03-08T19:30:00', ['a', 'b', 'c', 'd'], [38200, 27600, 21400, 12800], [{ playerId: 'a', name: '국사무쌍' }]);
 const g2 = game('g2', '2025-03-06T21:00:00', ['b', 'c', 'a', 'd'], [40000, 30000, 20000, 10000]);
 const g3 = game('g3', '2025-02-20T20:00:00', ['a', 'b', 'c', 'e'], [10000, 20000, 30000, 40000]);
 
@@ -62,8 +62,10 @@ describe('멤버 통계', () => {
     expect(a.games).toBe(2);
     expect(a.totalPoints).toBe(18.2);
     expect(a.avgRank).toBe(2);
+    expect(a.avgPoints).toBe(9.1);
     expect(a.rankCounts).toEqual([1, 0, 1, 0]);
     expect(a.firstRate).toBe(50);
+    expect(a.yakumanCount).toBe(1);
 
     const d = stats.get('d')!;
     expect(d.totalPoints).toBe(-57.2);
@@ -72,7 +74,7 @@ describe('멤버 통계', () => {
 
   it('대국이 없는 멤버는 빈 통계', () => {
     const stats = computeMemberStats([], ['z']);
-    expect(stats.get('z')).toMatchObject({ games: 0, totalPoints: 0, avgRank: null });
+    expect(stats.get('z')).toMatchObject({ games: 0, totalPoints: 0, avgRank: null, avgPoints: null, yakumanCount: 0 });
   });
 });
 
@@ -94,8 +96,9 @@ describe('랭킹', () => {
 describe('월 요약', () => {
   it('지난달 대비 증감을 계산한다', () => {
     const s = computeMonthlySummary([g1, g2, g3], 'a', '2025-03');
-    expect(s.games).toBe(2);
+    expect(s.games).toEqual({ current: 2, previous: 1, delta: 1 });
     expect(s.avgRank).toEqual({ current: 2, previous: 4, delta: -2 });
+    expect(s.avgPoints).toEqual({ current: 9.1, previous: -30, delta: 39.1 });
     expect(s.firstCount).toEqual({ current: 1, previous: 0, delta: 1 });
     expect(s.lastCount).toEqual({ current: 0, previous: 1, delta: -1 });
     expect(s.totalPoints).toEqual({ current: 18.2, previous: -30, delta: 48.2 });
@@ -109,19 +112,22 @@ describe('월 요약', () => {
 });
 
 describe('모임 요약', () => {
-  it('대국 수·참여 인원·1위/라스 최다를 계산한다', () => {
+  it('대국 수·최다 참여·평균 우마 1위·1위 최다를 계산한다', () => {
     const s = computeGroupSummary([g1, g2, g3], '2025-03');
     expect(s.games).toEqual({ current: 2, previous: 1, delta: 1 });
-    expect(s.players).toEqual({ current: 4, previous: 4, delta: 0 });
-    // 1위: g1 a, g2 b → 각 1회, 누적 우마가 높은 b
-    expect(s.topFirst).toEqual({ memberId: 'b', count: 1 });
-    expect(s.topLast).toEqual({ memberId: 'd', count: 2 });
+    // 모두 2국씩 참여 → 누적 우마가 높은 b
+    expect(s.mostActive).toEqual({ memberId: 'b', value: 2 });
+    // b: (7.6 + 30) / 2 = 18.8
+    expect(s.bestAverage).toEqual({ memberId: 'b', value: 18.8 });
+    // 1위: g1 a, g2 b → 각 1회, 평균 우마가 높은 b
+    expect(s.topFirst).toEqual({ memberId: 'b', value: 1 });
   });
 
   it('지난달 기록이 없으면 증감은 null, 대국이 없으면 최다는 null', () => {
     const s = computeGroupSummary([g3], '2025-02');
     expect(s.games).toEqual({ current: 1, previous: null, delta: null });
     expect(computeGroupSummary([], '2025-02').topFirst).toBeNull();
+    expect(computeGroupSummary([], '2025-02').mostActive).toBeNull();
   });
 });
 

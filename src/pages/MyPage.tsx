@@ -1,4 +1,4 @@
-import { ChevronDown, Coins, Crown, FileText, PieChart, TrendingUp, UserRound, Users } from 'lucide-react';
+import { ChevronDown, Coins, Crown, Dices, FileText, PieChart, Sparkles, UserRound, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -15,7 +15,7 @@ import { RankBadge } from '../components/RankBadge';
 import { Segmented } from '../components/Segmented';
 import { Skeleton, SkeletonRows } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
-import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
+import { formatDateShort, formatWeekday } from '../lib/format';
 import { formatPoints, formatScore } from '../lib/scoring';
 import { computeMemberStats, computeMonthlySummary, currentMonthKey, formatMonthKey, gamesForMember, gamesInMonth } from '../lib/stats';
 import type { Member } from '../lib/types';
@@ -94,7 +94,14 @@ export function MyPage() {
               <Avatar member={me} size={44} />
               <div className={s.meBannerBody}>
                 <div className={s.meBannerName}>{me.name}</div>
-                <div className={s.meBannerHint}>{isExplicit ? '이 기기에서 나로 기억돼요' : '아직 나를 고르지 않아 첫 멤버를 보여줘요'}</div>
+                <div className={s.meBannerHint}>
+                  {isExplicit ? '이 기기에서 나로 기억돼요' : '아직 나를 고르지 않아 첫 멤버를 보여줘요'}
+                  {stats && stats.yakumanCount > 0 && (
+                    <span className={s.yakumanBadge}>
+                      <Sparkles size={11} /> 역만 {stats.yakumanCount}회
+                    </span>
+                  )}
+                </div>
               </div>
               <Button variant={isExplicit ? 'outline' : 'primary'} size="sm" icon={<UserRound size={16} />} onClick={() => setPickOpen(true)}>
                 {isExplicit ? '변경' : '나 선택'}
@@ -124,11 +131,16 @@ export function MyPage() {
               ) : (
                 <StatGrid>
                   <StatCard
-                    icon={<TrendingUp size={18} color="#075844" />}
+                    icon={<Dices size={18} color="#075844" />}
                     tone="#e4efe9"
-                    label="평균 순위"
-                    value={formatAvgRank(stats.avgRank)}
-                    sub={monthly ? <Delta delta={monthly.avgRank.delta} lowerIsBetter digits={1} /> : `${stats.games}국 기준`}
+                    label="참여 횟수"
+                    value={
+                      <>
+                        {stats.games}
+                        <small>국</small>
+                      </>
+                    }
+                    sub={monthly ? <Delta delta={monthly.games.delta} digits={0} /> : '전체 기간'}
                   />
                   <StatCard
                     icon={<Crown size={18} color="#b9861f" />}
@@ -157,9 +169,15 @@ export function MyPage() {
                   <StatCard
                     icon={<Coins size={18} color="#075844" />}
                     tone="#e4efe9"
-                    label="누적 우마"
-                    value={<span className={stats.totalPoints > 0 ? 'pos' : stats.totalPoints < 0 ? 'neg' : ''}>{formatPoints(stats.totalPoints)}</span>}
-                    sub={monthly ? <Delta delta={monthly.totalPoints.delta} digits={1} /> : '정산 점수 합계'}
+                    label="평균 우마"
+                    value={
+                      stats.avgPoints === null ? (
+                        '-'
+                      ) : (
+                        <span className={stats.avgPoints > 0 ? 'pos' : stats.avgPoints < 0 ? 'neg' : ''}>{formatPoints(stats.avgPoints)}</span>
+                      )
+                    }
+                    sub={monthly ? <Delta delta={monthly.avgPoints.delta} digits={1} /> : `누적 ${formatPoints(stats.totalPoints)}`}
                   />
                 </StatGrid>
               )}
@@ -196,20 +214,30 @@ export function MyPage() {
               {myGames.length === 0 ? (
                 <EmptyState icon={<FileText size={24} />} title="참여한 대국이 없어요" description="이 기간에 내가 참여한 대국이 없어요." />
               ) : (
-                myGames.slice(0, 30).map(({ game, rank, score, points }) => (
-                  <Link key={game.id} to={`/games/${game.id}`} className={s.myGame}>
-                    <div className={s.myGameDate}>
-                      <strong>{formatDateShort(game.playedAt)}</strong>
-                      {formatWeekday(game.playedAt)}
-                    </div>
-                    <div className={s.myGameBody}>
-                      <div className={s.myGameTitle}>{game.title || '대국'}</div>
-                      <div className={s.myGameScore}>{formatScore(score)}점</div>
-                    </div>
-                    <RankBadge rank={rank} size="sm" />
-                    <Points value={points} className={s.myGamePoints} />
-                  </Link>
-                ))
+                myGames.slice(0, 30).map(({ game, rank, score, points }) => {
+                  const mine = me ? game.yakumans.filter((y) => y.playerId === me.id) : [];
+                  return (
+                    <Link key={game.id} to={`/games/${game.id}`} className={s.myGame}>
+                      <div className={s.myGameDate}>
+                        <strong>{formatDateShort(game.playedAt)}</strong>
+                        {formatWeekday(game.playedAt)}
+                      </div>
+                      <div className={s.myGameBody}>
+                        <div className={s.myGameTitle}>{game.place || '장소 미정'}</div>
+                        <div className={s.myGameScore}>
+                          {formatScore(score)}점
+                          {mine.length > 0 && (
+                            <span className={s.yakumanBadge}>
+                              <Sparkles size={11} /> {mine.map((y) => y.name).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <RankBadge rank={rank} size="sm" />
+                      <Points value={points} className={s.myGamePoints} />
+                    </Link>
+                  );
+                })
               )}
               {myGames.length > 30 && <div className={s.moreHint}>최근 30국만 표시돼요. 전체는 기록 탭에서 볼 수 있어요.</div>}
             </Card>

@@ -1,4 +1,5 @@
-import { SEED_CREATED_AT, SEED_MEMBERS } from '../../config/seedMembers';
+import { normalizeGame } from '../../../api/_lib/normalize';
+import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../../config/seedMembers';
 import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
 import { generateId } from './ids';
 import { StorageError, type StorageAdapter } from './StorageAdapter';
@@ -30,7 +31,8 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   private members(): Member[] {
     const existing = readJson<Member[]>(this.store, MEMBERS_KEY);
-    if (existing) return existing;
+    // 예전 초기 멤버가 손대지 않은 채 남아 있고 대국 기록도 없으면 새 초기 멤버로 교체
+    if (existing && !(isUntouchedLegacySeed(existing) && this.games().length === 0)) return existing;
     const seeded: Member[] = SEED_MEMBERS.map((m) => ({
       ...m,
       avatar: null,
@@ -42,7 +44,7 @@ export class LocalStorageAdapter implements StorageAdapter {
   }
 
   private games(): Game[] {
-    return readJson<Game[]>(this.store, GAMES_KEY) ?? [];
+    return (readJson<Game[]>(this.store, GAMES_KEY) ?? []).map(normalizeGame);
   }
 
   async listMembers(): Promise<Member[]> {

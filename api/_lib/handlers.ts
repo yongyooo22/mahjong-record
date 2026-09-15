@@ -1,9 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { Game, Member } from '../../src/lib/types';
+import type { Game, Member, Yakuman } from '../../src/lib/types';
+import { normalizeGame } from './normalize';
 import { generateId, HttpError, methodNotAllowed, paramString, parseBody, withStore } from './http';
 import { loadMembers, type Store } from './store';
 
 const GAME_TYPES = new Set(['hanchan', 'tonpuu']);
+const PLACE_MAX = 40;
+const YAKUMAN_NAME_MAX = 40;
+const YAKUMAN_MAX = 8;
 
 function str(v: unknown, max = 200): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -42,14 +46,25 @@ function validateGame(input: Record<string, unknown>, members: Member[]): Omit<G
     throw new HttpError(400, '정산 규칙이 올바르지 않습니다.');
   }
 
+  const rawYakumans = Array.isArray(input.yakumans) ? input.yakumans : [];
+  if (rawYakumans.length > YAKUMAN_MAX) throw new HttpError(400, `역만은 최대 ${YAKUMAN_MAX}건까지 기록할 수 있습니다.`);
+  const yakumans: Yakuman[] = rawYakumans.map((y) => {
+    const item = (y ?? {}) as Record<string, unknown>;
+    const playerId = str(item.playerId, 40);
+    const name = str(item.name, YAKUMAN_NAME_MAX);
+    if (!playerIds.includes(playerId)) throw new HttpError(400, '역만을 낸 사람은 참가자 중에서 골라야 합니다.');
+    if (!name) throw new HttpError(400, '역만 이름을 입력해 주세요.');
+    return { playerId, name };
+  });
+
   return {
     playedAt: playedAt.toISOString(),
-    title: str(input.title, 60),
+    place: str(input.place, PLACE_MAX),
     playerCount,
     gameType: gameType as Game['gameType'],
     playerIds,
     scores: scores.map((s) => Math.round(s)),
-    memo: str(input.memo, 200),
+    yakumans,
     rules: {
       startPoints: Number(rules.startPoints),
       returnPoints: Number(rules.returnPoints),
@@ -118,7 +133,7 @@ export const memberByIdHandler = (resolveStore?: () => Store | null) =>
 export const gamesHandler = (resolveStore?: () => Store | null) =>
   withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
     if (req.method === 'GET') {
-      const games = await store.getGames();
+      const games = (await store.getGames()).map(normalizeGame);
       games.sort((a, b) => (a.playedAt < b.playedAt ? 1 : a.playedAt > b.playedAt ? -1 : 0));
       res.status(200).json(games);
       return;
