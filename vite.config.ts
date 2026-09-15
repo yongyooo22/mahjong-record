@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { avatarFilesPlugin } from './vite.avatarFiles';
 
 /**
  * 개발 시 API 까지 함께 띄우려면 `vercel dev` 를 사용하세요 (npm run dev:vercel).
@@ -9,7 +10,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const proxyTarget = process.env.VITE_API_PROXY;
   return {
-    plugins: [react()],
+    plugins: [react(), avatarFilesPlugin()],
     server: {
       port: 5173,
       proxy: proxyTarget && mode !== 'production' ? { '/api': { target: proxyTarget, changeOrigin: true } } : undefined,

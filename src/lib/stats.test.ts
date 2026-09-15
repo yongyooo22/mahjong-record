@@ -3,9 +3,11 @@ import { DEFAULT_RULES } from '../config/rules';
 import type { Game, Member } from './types';
 import {
   availableMonths,
+  computeGroupSummary,
   computeMemberStats,
   computeMonthlySummary,
   computeRanking,
+  gamesForMember,
   gamesInMonth,
   monthKey,
   previousMonthKey,
@@ -103,5 +105,32 @@ describe('월 요약', () => {
     const s = computeMonthlySummary([g1, g2], 'a', '2025-03');
     expect(s.avgRank.delta).toBeNull();
     expect(s.totalPoints.delta).toBeNull();
+  });
+});
+
+describe('모임 요약', () => {
+  it('대국 수·참여 인원·1위/라스 최다를 계산한다', () => {
+    const s = computeGroupSummary([g1, g2, g3], '2025-03');
+    expect(s.games).toEqual({ current: 2, previous: 1, delta: 1 });
+    expect(s.players).toEqual({ current: 4, previous: 4, delta: 0 });
+    // 1위: g1 a, g2 b → 각 1회, 누적 우마가 높은 b
+    expect(s.topFirst).toEqual({ memberId: 'b', count: 1 });
+    expect(s.topLast).toEqual({ memberId: 'd', count: 2 });
+  });
+
+  it('지난달 기록이 없으면 증감은 null, 대국이 없으면 최다는 null', () => {
+    const s = computeGroupSummary([g3], '2025-02');
+    expect(s.games).toEqual({ current: 1, previous: null, delta: null });
+    expect(computeGroupSummary([], '2025-02').topFirst).toBeNull();
+  });
+});
+
+describe('멤버별 대국', () => {
+  it('참여한 대국만 최신순으로, 본인 순위와 점수를 붙인다', () => {
+    const rows = gamesForMember([g3, g2, g1], 'a');
+    expect(rows.map((r) => r.game.id)).toEqual(['g1', 'g2', 'g3']);
+    expect(rows[0]).toMatchObject({ rank: 1, score: 38200, points: 28.2 });
+    expect(rows[2]).toMatchObject({ rank: 4, score: 10000 });
+    expect(gamesForMember([g1], 'e')).toEqual([]);
   });
 });

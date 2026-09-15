@@ -1,0 +1,215 @@
+/* ---- 헤더의 "나" 버튼 ---- */
+.meBtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 34px;
+}
+
+.meBtnNoAvatar {
+  padding-left: 10px;
+  padding-right: 8px;
+}
+
+.meName {
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meBtn:active {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---- 나 배너 ---- */
+.meBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.meBannerBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.meBannerName {
+  font-weight: 800;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meBannerHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sectionMeta {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.sectionMeta span {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ---- 순위 분포 ---- */
+.dist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.distRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.distLabel {
+  flex: 0 0 64px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.distTrack {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--ivory);
+  overflow: hidden;
+}
+
+.distBar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.distBar1 {
+  background: linear-gradient(90deg, #f1cd6d, #d3a640);
+}
+
+.distBar2 {
+  background: linear-gradient(90deg, #c7cdd3, #9ea6ae);
+}
+
+.distBar3 {
+  background: linear-gradient(90deg, #d8a06f, #b5764a);
+}
+
+.distBar4 {
+  background: linear-gradient(90deg, #d9a39d, #c83d32);
+}
+
+.distValue {
+  flex: 0 0 76px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.distValue small {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+/* ---- 내 대국 목록 ---- */
+.myGame {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+}
+
+.myGame:first-of-type {
+  border-top: 0;
+}
+
+.myGameDate {
+  flex: 0 0 58px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.myGameDate strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.myGameBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.myGameTitle {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.myGameScore {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.myGamePoints {
+  font-size: 15px;
+  min-width: 52px;
+  text-align: right;
+}
+
+.moreHint {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+  padding-top: 8px;
+}
+
+/* ---- 나 선택 모달 ---- */
+.meList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.meItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+}
+
+.meItemActive {
+  border-color: var(--green);
+  background: #eef5f2;
+}

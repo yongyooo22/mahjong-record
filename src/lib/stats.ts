@@ -156,3 +156,66 @@ export function computeMonthlySummary(games: Game[], memberId: string, month: st
     totalPoints: delta(cur.totalPoints, prevPlayed ? prev.totalPoints : null),
   };
 }
+
+export interface GroupSummary {
+  month: string;
+  /** 이번 달 대국 수 (지난달 대비) */
+  games: StatDelta;
+  /** 이번 달에 한 번이라도 참여한 멤버 수 (지난달 대비) */
+  players: StatDelta;
+  /** 1위를 가장 많이 한 멤버 (없으면 null) */
+  topFirst: { memberId: string; count: number } | null;
+  /** 4위(라스)를 가장 많이 한 멤버 (없으면 null) */
+  topLast: { memberId: string; count: number } | null;
+}
+
+function topByRank(stats: Map<string, MemberStats>, rankIndex: 0 | 3): GroupSummary['topFirst'] {
+  let best: { memberId: string; count: number; points: number } | null = null;
+  for (const [memberId, s] of stats) {
+    const count = s.rankCounts[rankIndex];
+    if (count === 0) continue;
+    // 같은 횟수면 1위 최다는 누적 우마가 높은 쪽, 라스 최다는 낮은 쪽
+    const better =
+      !best ||
+      count > best.count ||
+      (count === best.count && (rankIndex === 0 ? s.totalPoints > best.points : s.totalPoints < best.points));
+    if (better) best = { memberId, count, points: s.totalPoints };
+  }
+  return best ? { memberId: best.memberId, count: best.count } : null;
+}
+
+/** 모임 전체의 이번 달 요약 — 누가 보든 같은 값 (홈 화면용) */
+export function computeGroupSummary(games: Game[], month: string): GroupSummary {
+  const cur = gamesInMonth(games, month);
+  const prev = gamesInMonth(games, previousMonthKey(month));
+  const prevPlayed = prev.length > 0;
+  const stats = computeMemberStats(cur);
+  const countPlayers = (list: Game[]) => new Set(list.flatMap((g) => g.playerIds)).size;
+  return {
+    month,
+    games: delta(cur.length, prevPlayed ? prev.length : null),
+    players: delta(countPlayers(cur), prevPlayed ? countPlayers(prev) : null),
+    topFirst: topByRank(stats, 0),
+    topLast: topByRank(stats, 3),
+  };
+}
+
+export interface MemberGameRow {
+  game: Game;
+  rank: number;
+  score: number;
+  points: number;
+}
+
+/** 특정 멤버가 참여한 대국을 최신순으로, 그 멤버의 순위·점수와 함께 */
+export function gamesForMember(games: Game[], memberId: string): MemberGameRow[] {
+  const rows: MemberGameRow[] = [];
+  for (const game of sortGamesDesc(games)) {
+    const index = game.playerIds.indexOf(memberId);
+    if (index < 0) continue;
+    const r = computeResults(game.scores, game.rules, game.gameType)[index];
+    if (!r) continue;
+    rows.push({ game, rank: r.rank, score: r.score, points: r.points });
+  }
+  return rows;
+}

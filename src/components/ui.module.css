@@ -1,3 +1,74 @@
+/* ---------- Stat card ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+
+.stat {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.statIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.statValue small {
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+
+.statSub {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.25;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.statValueText {
+  font-size: 18px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
 /* ---------- Card ---------- */
 .card {
   background: var(--white);
@@ -500,7 +571,7 @@
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--line);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   padding: 6px 8px calc(6px + var(--safe-bottom));
   min-height: calc(var(--nav-height) + var(--safe-bottom));
 }

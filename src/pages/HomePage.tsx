@@ -1,5 +1,5 @@
-import { Bell, ChevronDown, ChevronRight, Clock, Coins, Crown, Database, HardDrive, PenLine, TrendingUp, Trophy, UserRound } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Bell, ChevronRight, Clock, Crown, Database, Dices, HardDrive, PenLine, Trophy, UserRound, Users } from 'lucide-react';
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
@@ -8,33 +8,21 @@ import { Delta } from '../components/Delta';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { Mascot } from '../components/Mascot';
-import { Modal } from '../components/Modal';
 import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
+import { StatCard, StatGrid } from '../components/StatCard';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
-import { computeResults, formatPoints } from '../lib/scoring';
-import { computeMonthlySummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
-import type { Member } from '../lib/types';
+import { computeResults } from '../lib/scoring';
+import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
 import { useData, useMemberMap } from '../state/DataProvider';
-import { useMe } from '../state/useMe';
 import app from '../styles/App.module.css';
+import ui from '../components/ui.module.css';
 import s from './Home.module.css';
 
-/** 헤더 오른쪽 "나" 버튼: 아바타가 있으면 아바타만, 없으면 이름을 보여줍니다. */
-function MeButton({ me, onClick }: { me: Member; onClick: () => void }) {
-  const [hasAvatar, setHasAvatar] = useState(true);
-  return (
-    <button type="button" className={[s.meBtn, hasAvatar ? '' : s.meBtnNoAvatar].join(' ')} onClick={onClick} aria-label={`내 이름: ${me.name}, 변경`}>
-      <Avatar member={me} size={28} onLoadState={setHasAvatar} />
-      {!hasAvatar && <span className={s.meName}>{me.name}</span>}
-      <ChevronDown size={14} />
-    </button>
-  );
-}
+const APP_SUBTITLE = '대국 기록 · 랭킹 · 통계';
 
-function HomeHeader({ onPickMe }: { onPickMe: () => void }) {
-  const { me } = useMe();
+function HomeHeader() {
   return (
     <header className={app.header}>
       <div className={app.headerInner}>
@@ -44,12 +32,11 @@ function HomeHeader({ onPickMe }: { onPickMe: () => void }) {
           </div>
           <div className={s.titleBox}>
             <h1 className={s.appName}>마작 고수들의 모임</h1>
-            <p className={s.subtitle}>좋은 패, 좋은 사람들.</p>
+            <p className={s.subtitle}>{APP_SUBTITLE}</p>
           </div>
           <button type="button" className={s.bell} aria-label="알림 (준비 중)">
             <Bell size={22} />
           </button>
-          {me && <MeButton me={me} onClick={onPickMe} />}
         </div>
         <div className={s.hero}>
           <Mascot name="home" className={s.heroImg} fallbackClassName={s.heroEmpty} />
@@ -59,36 +46,31 @@ function HomeHeader({ onPickMe }: { onPickMe: () => void }) {
   );
 }
 
-function StatCard({ icon, tone, label, value, delta }: { icon: React.ReactNode; tone: string; label: string; value: React.ReactNode; delta: React.ReactNode }) {
-  return (
-    <div className={s.stat}>
-      <div className={s.statIcon} style={{ background: tone }}>
-        {icon}
-      </div>
-      <div className={s.statLabel}>{label}</div>
-      <div className={s.statValue}>{value}</div>
-      <div className={s.statDelta}>{delta}</div>
-    </div>
-  );
+/** 이름을 값으로 쓰는 통계 카드 값 (1위 최다 / 라스 최다) */
+function NameStat({ name }: { name: string | null }) {
+  return <span className={ui.statValueText}>{name ?? '-'}</span>;
 }
 
+/**
+ * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황, 랭킹, 최근 대국.
+ * 개인 통계는 "내 기록" 탭에서 봅니다.
+ */
 export function HomePage() {
   const navigate = useNavigate();
   const { status, error, retry, games, members, storageKind } = useData();
   const memberMap = useMemberMap();
-  const { me, setMe } = useMe();
-  const [pickOpen, setPickOpen] = useState(false);
   const month = currentMonthKey();
 
-  const summary = useMemo(() => (me ? computeMonthlySummary(games, me.id, month) : null), [games, me, month]);
+  const summary = useMemo(() => computeGroupSummary(games, month), [games, month]);
   const ranking = useMemo(() => computeRanking(gamesInMonth(games, month), members), [games, members, month]);
   const recent = useMemo(() => sortGamesDesc(games).slice(0, 5), [games]);
 
   const loading = status === 'loading';
+  const nameOf = (id: string | undefined) => (id ? (memberMap.get(id)?.name ?? '?') : null);
 
   return (
     <>
-      <HomeHeader onPickMe={() => setPickOpen(true)} />
+      <HomeHeader />
       <div className={s.ctaWrap}>
         <Button variant="primary" full decorated className={s.cta} onClick={() => navigate('/record')} disabled={status !== 'ready'}>
           <span className={s.ctaLabel}>
@@ -106,75 +88,71 @@ export function HomePage() {
           </Card>
         )}
 
-        {/* 이번 달 통계 */}
+        {/* 이번 달 모임 현황 (공용) */}
         <section>
           <div className={s.statsMeta}>
             <div className={s.statsMetaTitle}>
-              {loading ? <Skeleton width={120} height={16} /> : me ? (
-                <>
-                  {me.name}님의 {formatMonthKey(month)} <span>· {summary?.games ?? 0}국</span>
-                </>
+              {loading ? (
+                <Skeleton width={120} height={16} />
               ) : (
-                '이번 달'
+                <>
+                  {formatMonthKey(month)} 모임 현황 <span>· {summary.games.current ?? 0}국</span>
+                </>
               )}
             </div>
-            {!loading && members.length > 0 && (
-              <button type="button" className={app.iconBtn} style={{ color: 'var(--text-muted)', width: 'auto', height: 32, padding: '0 6px', fontSize: 12.5, fontWeight: 600, gap: 2 }} onClick={() => setPickOpen(true)}>
-                <UserRound size={14} /> 나 선택
-              </button>
+            {!loading && (
+              <Link to="/me" className={s.statsMetaLink}>
+                <UserRound size={14} /> 내 기록 보기
+              </Link>
             )}
           </div>
           {loading ? (
-            <div className={s.stats}>
+            <StatGrid>
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} height={118} radius={16} />
               ))}
-            </div>
+            </StatGrid>
           ) : (
-            <div className={s.stats}>
+            <StatGrid>
               <StatCard
-                icon={<TrendingUp size={18} color="#075844" />}
+                icon={<Dices size={18} color="#075844" />}
                 tone="#e4efe9"
-                label="평균 순위"
-                value={summary && summary.avgRank.current !== null ? formatAvgRank(summary.avgRank.current) : '-'}
-                delta={<Delta delta={summary?.avgRank.delta ?? null} lowerIsBetter digits={1} />}
+                label="이번 달 대국"
+                value={
+                  <>
+                    {summary.games.current ?? 0}
+                    <small>국</small>
+                  </>
+                }
+                sub={<Delta delta={summary.games.delta} digits={0} />}
+              />
+              <StatCard
+                icon={<Users size={18} color="#075844" />}
+                tone="#e4efe9"
+                label="참여 멤버"
+                value={
+                  <>
+                    {summary.players.current ?? 0}
+                    <small>명</small>
+                  </>
+                }
+                sub={<Delta delta={summary.players.delta} digits={0} />}
               />
               <StatCard
                 icon={<Crown size={18} color="#b9861f" />}
                 tone="#fbf0d0"
-                label="1위 횟수"
-                value={
-                  <>
-                    {summary?.firstCount.current ?? 0}
-                    <small>회</small>
-                  </>
-                }
-                delta={<Delta delta={summary?.firstCount.delta ?? null} digits={0} />}
+                label="1위 최다"
+                value={<NameStat name={nameOf(summary.topFirst?.memberId)} />}
+                sub={summary.topFirst ? `${summary.topFirst.count}회 1위` : '아직 없음'}
               />
               <StatCard
                 icon={<span style={{ fontFamily: 'serif', fontWeight: 800, color: '#C83D32', fontSize: 16, lineHeight: 1 }}>中</span>}
                 tone="#fbeae8"
-                label="라스 횟수"
-                value={
-                  <>
-                    {summary?.lastCount.current ?? 0}
-                    <small>회</small>
-                  </>
-                }
-                delta={<Delta delta={summary?.lastCount.delta ?? null} lowerIsBetter digits={0} />}
+                label="라스 최다"
+                value={<NameStat name={nameOf(summary.topLast?.memberId)} />}
+                sub={summary.topLast ? `${summary.topLast.count}회 라스` : '아직 없음'}
               />
-              <StatCard
-                icon={<Coins size={18} color="#075844" />}
-                tone="#e4efe9"
-                label="누적 우마"
-                value={
-                  <span className={summary && summary.totalPoints.current ? (summary.totalPoints.current > 0 ? 'pos' : 'neg') : ''}>
-                    {formatPoints(summary?.totalPoints.current ?? 0)}
-                  </span>
-                }
-                delta={<Delta delta={summary?.totalPoints.delta ?? null} digits={1} />}
-              />
-            </div>
+            </StatGrid>
           )}
         </section>
 
@@ -249,28 +227,6 @@ export function HomePage() {
           </div>
         )}
       </div>
-
-      <Modal open={pickOpen} onClose={() => setPickOpen(false)} title="내 이름 선택">
-        홈 화면의 통계를 보여줄 멤버를 골라주세요. 이 기기에만 기억됩니다.
-        <div className={s.meList}>
-          {members
-            .filter((m) => m.active || m.id === me?.id)
-            .map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                className={[s.meItem, m.id === me?.id ? s.meItemActive : ''].join(' ')}
-                onClick={() => {
-                  setMe(m.id);
-                  setPickOpen(false);
-                }}
-              >
-                <Avatar member={m} size={30} />
-                {m.name}
-              </button>
-            ))}
-        </div>
-      </Modal>
     </>
   );
 }
