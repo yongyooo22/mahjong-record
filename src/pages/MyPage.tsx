@@ -95,7 +95,7 @@ export function MyPage() {
               <div className={s.meBannerBody}>
                 <div className={s.meBannerName}>{me.name}</div>
                 <div className={s.meBannerHint}>
-                  {isExplicit ? '이 기기에서 나로 기억돼요' : '오른쪽 버튼을 눌러 나를 골라 주세요'}
+                  오른쪽 버튼을 눌러 나를 골라 주세요
                   {stats && stats.yakumanCount > 0 && (
                     <span className={s.yakumanBadge}>
                       <Sparkles size={11} /> 역만 {stats.yakumanCount}회
