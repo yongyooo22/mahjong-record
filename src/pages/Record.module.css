@@ -7,8 +7,8 @@
 .headerMascot {
   position: absolute;
   right: 14px;
-  bottom: -4px;
-  height: 108px;
+  bottom: 10px;
+  height: 104px;
   width: auto;
   max-width: 40%;
   object-fit: contain;

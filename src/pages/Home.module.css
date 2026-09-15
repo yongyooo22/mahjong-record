@@ -23,6 +23,14 @@
   flex: 0 0 auto;
 }
 
+.logoImg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 .titleBox {
   flex: 1;
   min-width: 0;
@@ -269,7 +277,7 @@
 .recentPlayer {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 13px;
   font-weight: 600;
 }

@@ -1,5 +1,5 @@
 import { ChevronRight, Clock, Coins, Dices, Flame, PenLine, Sparkles, TrendingUp, Trophy, UserRound } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
@@ -9,11 +9,10 @@ import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { Mascot } from '../components/Mascot';
 import { Points } from '../components/Points';
-import { CrownMark } from '../components/CrownMark';
 import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
-import { headerBgStyle } from '../config/images';
+import { headerBgStyle, LOGO_IMAGE } from '../config/images';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
 import { computeResults, formatPoints } from '../lib/scoring';
 import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc, type TopMember } from '../lib/stats';
@@ -24,14 +23,25 @@ import s from './Home.module.css';
 
 const APP_SUBTITLE = '대국 기록 · 랭킹 · 통계';
 
+/** 왼쪽 위 로고: public/images/logo.png 가 있으면 그 그림, 없으면 發 패 */
+function Logo() {
+  const [missing, setMissing] = useState(false);
+  if (missing) {
+    return (
+      <div className={s.logo} aria-hidden="true">
+        發
+      </div>
+    );
+  }
+  return <img src={LOGO_IMAGE} alt="" className={s.logoImg} decoding="async" onError={() => setMissing(true)} />;
+}
+
 function HomeHeader() {
   return (
     <header className={[app.header, app.headerImage].join(' ')} style={headerBgStyle('home')}>
       <div className={app.headerInner}>
         <div className={s.top}>
-          <div className={s.logo} aria-hidden="true">
-            發
-          </div>
+          <Logo />
           <div className={s.titleBox}>
             <h1 className={s.appName}>마작 고수들의 모임</h1>
             <p className={s.subtitle}>{APP_SUBTITLE}</p>
@@ -171,7 +181,7 @@ export function HomePage() {
             ranking.map((row) => (
               <div key={row.member.id} className={s.rankRow}>
                 <RankBadge rank={row.position} pill />
-                <Avatar member={row.member} size={34} crown={row.position === 1} />
+                <Avatar member={row.member} size={34} />
                 <div className={s.rankName}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.member.name}</span>
                   {row.position === 1 && <span className={s.mvp}>MVP</span>}
@@ -219,7 +229,6 @@ export function HomePage() {
                       {ordered.map((r) => (
                         <span key={r.index} className={s.recentPlayer}>
                           <RankBadge rank={r.rank} size="sm" />
-                          {r.rank === 1 && <CrownMark size={13} />}
                           <span>{memberMap.get(g.playerIds[r.index])?.name ?? '?'}</span>
                         </span>
                       ))}

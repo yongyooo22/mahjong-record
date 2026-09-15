@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card, SectionHeader } from '../components/Card';
-import { CrownMark } from '../components/CrownMark';
 import { Delta } from '../components/Delta';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
@@ -190,10 +189,7 @@ export function MyPage() {
                     const pct = Math.round((count / stats.games) * 100);
                     return (
                       <div key={i} className={s.distRow}>
-                        <span className={s.distLabel}>
-                          {i === 0 && <CrownMark size={13} />}
-                          {RANK_LABEL[i]}
-                        </span>
+                        <span className={s.distLabel}>{RANK_LABEL[i]}</span>
                         <div className={s.distTrack}>
                           <div className={[s.distBar, s[`distBar${i + 1}`]].join(' ')} style={{ width: `${pct}%` }} />
                         </div>
@@ -232,7 +228,6 @@ export function MyPage() {
                           )}
                         </div>
                       </div>
-                      {rank === 1 && <CrownMark size={14} />}
                       <RankBadge rank={rank} size="sm" />
                       <Points value={points} className={s.myGamePoints} />
                     </Link>

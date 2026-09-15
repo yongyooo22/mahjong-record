@@ -2,6 +2,7 @@
  * 이미지 경로 규칙을 한 곳에서 관리합니다.
  * 실제 이미지 파일은 GitHub 저장소의 public/images/ 아래에 직접 넣어 주세요.
  *
+ *   public/images/logo.png            → 홈 왼쪽 위 로고 (정사각형, 투명 배경 권장). 없으면 發 패 그림을 그립니다
  *   public/images/bg/home.webp        → 홈 화면 상단 배경 (가로 2:1)
  *   public/images/bg/record.webp      → 대국 기록 화면 상단 배경 (가로 2:1)
  *   public/images/mascot/home.png     → 홈 화면 마스코트 (투명 배경 PNG)
@@ -11,6 +12,9 @@
 import avatarFiles from 'virtual:avatar-files';
 
 export const IMAGE_BASE = '/images';
+
+/** 홈 왼쪽 위 로고. 파일이 없으면 기본 發 패 로고로 대체됩니다. */
+export const LOGO_IMAGE = `${IMAGE_BASE}/logo.png`;
 
 export const MASCOT_IMAGES = {
   home: `${IMAGE_BASE}/mascot/home.png`,

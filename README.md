@@ -95,6 +95,7 @@ Redis 에는 다음 두 키만 사용합니다.
 
 | 용도 | 경로 |
 | --- | --- |
+| 홈 왼쪽 위 로고 | `public/images/logo.png` (정사각형, 투명 배경) — 없으면 發 패 모양 기본 로고 |
 | 홈 상단 배경 | `public/images/bg/home.webp` (가로 2:1) |
 | 기록 화면 상단 배경 | `public/images/bg/record.webp` (가로 2:1) |
 | 홈 마스코트 | `public/images/mascot/home.png` (투명 배경) |

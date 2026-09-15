@@ -272,26 +272,6 @@
   box-shadow: 0 1px 4px rgba(32, 48, 57, 0.15);
 }
 
-/* 1위 왕관 */
-.crown {
-  color: #e0a92c;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
-  flex: 0 0 auto;
-}
-
-.avatarWrap {
-  position: relative;
-  display: inline-flex;
-  flex: 0 0 auto;
-}
-
-.avatarCrown {
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-8deg);
-}
-
 /* ---------- Rank badge ---------- */
 .rank {
   display: inline-flex;
