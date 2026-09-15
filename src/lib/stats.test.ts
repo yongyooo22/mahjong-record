@@ -115,12 +115,12 @@ describe('모임 요약', () => {
   it('대국 수·최다 참여·평균 우마 1위·1위 최다를 계산한다', () => {
     const s = computeGroupSummary([g1, g2, g3], '2025-03');
     expect(s.games).toEqual({ current: 2, previous: 1, delta: 1 });
-    // 모두 2국씩 참여 → 누적 우마가 높은 b
-    expect(s.mostActive).toEqual({ memberId: 'b', value: 2 });
+    // 모두 2국씩 참여 → 4명 전원 동률
+    expect(s.mostActive).toEqual({ memberIds: ['a', 'b', 'c', 'd'], value: 2, candidates: 4 });
     // b: (7.6 + 30) / 2 = 18.8
-    expect(s.bestAverage).toEqual({ memberId: 'b', value: 18.8 });
-    // 1위: g1 a, g2 b → 각 1회, 평균 우마가 높은 b
-    expect(s.topFirst).toEqual({ memberId: 'b', value: 1 });
+    expect(s.bestAverage).toEqual({ memberIds: ['b'], value: 18.8, candidates: 4 });
+    // 1위: g1 a, g2 b → 각 1회 동률
+    expect(s.topFirst).toEqual({ memberIds: ['a', 'b'], value: 1, candidates: 4 });
   });
 
   it('지난달 기록이 없으면 증감은 null, 대국이 없으면 최다는 null', () => {

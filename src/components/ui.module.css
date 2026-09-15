@@ -69,6 +69,11 @@
   display: block;
 }
 
+.statValueTie {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
 /* ---------- Card ---------- */
 .card {
   background: var(--white);

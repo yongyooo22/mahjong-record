@@ -170,9 +170,12 @@ export function computeMonthlySummary(games: Game[], memberId: string, month: st
 }
 
 export interface TopMember {
-  memberId: string;
+  /** 지표가 가장 큰 멤버들 (동률이면 여러 명, 대국 참여 순서 무관) */
+  memberIds: string[];
   /** 지표 값 (참여 수·평균 우마·1위 횟수) */
   value: number;
+  /** 이번 달에 대국한 멤버 수 (전원 동률 표시용) */
+  candidates: number;
 }
 
 export interface GroupSummary {
@@ -187,16 +190,24 @@ export interface GroupSummary {
   topFirst: TopMember | null;
 }
 
-/** 지표가 가장 큰 멤버. 같으면 tieBreak 가 큰 쪽 */
-function topMember(stats: Map<string, MemberStats>, metric: (s: MemberStats) => number | null, tieBreak: (s: MemberStats) => number): TopMember | null {
-  let best: { memberId: string; value: number; tie: number } | null = null;
+/** 지표가 가장 큰 멤버들. 동률이면 모두 포함합니다. */
+function topMembers(stats: Map<string, MemberStats>, metric: (s: MemberStats) => number | null): TopMember | null {
+  let best: number | null = null;
+  let ids: string[] = [];
+  let candidates = 0;
   for (const [memberId, s] of stats) {
+    if (s.games === 0) continue;
+    candidates += 1;
     const value = metric(s);
-    if (value === null || s.games === 0) continue;
-    const tie = tieBreak(s);
-    if (!best || value > best.value || (value === best.value && tie > best.tie)) best = { memberId, value, tie };
+    if (value === null) continue;
+    if (best === null || value > best) {
+      best = value;
+      ids = [memberId];
+    } else if (value === best) {
+      ids.push(memberId);
+    }
   }
-  return best ? { memberId: best.memberId, value: best.value } : null;
+  return best === null ? null : { memberIds: ids, value: best, candidates };
 }
 
 /** 모임 전체의 이번 달 요약 — 누가 보든 같은 값 (홈 화면용) */
@@ -207,13 +218,9 @@ export function computeGroupSummary(games: Game[], month: string): GroupSummary 
   return {
     month,
     games: delta(cur.length, prev.length > 0 ? prev.length : null),
-    mostActive: topMember(stats, (s) => s.games, (s) => s.totalPoints),
-    bestAverage: topMember(stats, (s) => s.avgPoints, (s) => s.games),
-    topFirst: topMember(
-      stats,
-      (s) => (s.rankCounts[0] > 0 ? s.rankCounts[0] : null),
-      (s) => s.avgPoints ?? 0,
-    ),
+    mostActive: topMembers(stats, (s) => s.games),
+    bestAverage: topMembers(stats, (s) => s.avgPoints),
+    topFirst: topMembers(stats, (s) => (s.rankCounts[0] > 0 ? s.rankCounts[0] : null)),
   };
 }
 

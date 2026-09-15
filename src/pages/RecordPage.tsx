@@ -478,7 +478,7 @@ export function RecordPage() {
           )}
 
           <div className={s.saveWrap}>
-            <Button type="submit" variant="danger" full decorated className={s.save} disabled={!canSave} loading={saving} icon={<Check size={22} strokeWidth={3} />}>
+            <Button type="submit" variant="danger" full className={s.save} disabled={!canSave} loading={saving} icon={<Check size={22} strokeWidth={3} />}>
               저장하기
             </Button>
           </div>

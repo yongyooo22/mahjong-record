@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Clock, Coins, Crown, Database, Dices, Flame, HardDrive, PenLine, Sparkles, Trophy, UserRound } from 'lucide-react';
+import { Bell, ChevronRight, Clock, Coins, Crown, Dices, Flame, PenLine, Sparkles, Trophy, UserRound } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -15,7 +15,7 @@ import { StatCard, StatGrid } from '../components/StatCard';
 import { headerBgStyle } from '../config/images';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
 import { computeResults, formatPoints } from '../lib/scoring';
-import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
+import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc, type TopMember } from '../lib/stats';
 import { useData, useMemberMap } from '../state/DataProvider';
 import app from '../styles/App.module.css';
 import ui from '../components/ui.module.css';
@@ -47,9 +47,17 @@ function HomeHeader() {
   );
 }
 
-/** 이름을 값으로 쓰는 통계 카드 값 (1위 최다 / 라스 최다) */
-function NameStat({ name }: { name: string | null }) {
-  return <span className={ui.statValueText}>{name ?? '-'}</span>;
+/**
+ * 이름을 값으로 쓰는 통계 카드 값 (최다 참여 / 평균 우마 1위 / 1위 최다).
+ * 동률이면 이름을 나란히 적고, 대국한 사람 전원이 같으면 "전원 동률" 로 보여줍니다.
+ */
+function NameStat({ top, nameOf }: { top: TopMember | null; nameOf: (id: string) => string }) {
+  if (!top) return <span className={ui.statValueText}>-</span>;
+  const n = top.memberIds.length;
+  if (n === 1) return <span className={ui.statValueText}>{nameOf(top.memberIds[0])}</span>;
+  if (n >= 2 && n === top.candidates) return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>전원 동률</span>;
+  if (n <= 3) return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{top.memberIds.map(nameOf).join(' · ')}</span>;
+  return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{n}명 동률</span>;
 }
 
 /**
@@ -58,7 +66,7 @@ function NameStat({ name }: { name: string | null }) {
  */
 export function HomePage() {
   const navigate = useNavigate();
-  const { status, error, retry, games, members, storageKind } = useData();
+  const { status, error, retry, games, members } = useData();
   const memberMap = useMemberMap();
   const month = currentMonthKey();
 
@@ -67,18 +75,22 @@ export function HomePage() {
   const recent = useMemo(() => sortGamesDesc(games).slice(0, 5), [games]);
 
   const loading = status === 'loading';
-  const nameOf = (id: string | undefined) => (id ? (memberMap.get(id)?.name ?? '?') : null);
+  const nameOf = (id: string) => memberMap.get(id)?.name ?? '?';
 
   return (
     <>
       <HomeHeader />
       <div className={s.ctaWrap}>
-        <Button variant="primary" full decorated className={s.cta} onClick={() => navigate('/record')} disabled={status !== 'ready'}>
+        <Button variant="primary" full className={s.cta} onClick={() => navigate('/record')} disabled={status !== 'ready'}>
           <span className={s.ctaLabel}>
-            <PenLine size={20} />
+            <span className={s.ctaIcon}>
+              <PenLine size={18} />
+            </span>
             대국 기록하기
           </span>
-          <ChevronRight size={20} />
+          <span className={s.ctaArrow}>
+            <ChevronRight size={18} />
+          </span>
         </Button>
       </div>
 
@@ -131,21 +143,21 @@ export function HomePage() {
                 icon={<Flame size={18} color="#075844" />}
                 tone="#e4efe9"
                 label="최다 참여"
-                value={<NameStat name={nameOf(summary.mostActive?.memberId)} />}
+                value={<NameStat top={summary.mostActive} nameOf={nameOf} />}
                 sub={summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
               />
               <StatCard
                 icon={<Coins size={18} color="#075844" />}
                 tone="#e4efe9"
                 label="평균 우마 1위"
-                value={<NameStat name={nameOf(summary.bestAverage?.memberId)} />}
+                value={<NameStat top={summary.bestAverage} nameOf={nameOf} />}
                 sub={summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
               />
               <StatCard
                 icon={<Crown size={18} color="#b9861f" />}
                 tone="#fbf0d0"
                 label="1위 최다"
-                value={<NameStat name={nameOf(summary.topFirst?.memberId)} />}
+                value={<NameStat top={summary.topFirst} nameOf={nameOf} />}
                 sub={summary.topFirst ? `${summary.topFirst.value}회 1위` : '아직 없음'}
               />
             </StatGrid>
@@ -222,12 +234,6 @@ export function HomePage() {
           )}
         </Card>
 
-        {storageKind && (
-          <div className={s.storageBadge}>
-            {storageKind === 'remote' ? <Database size={12} /> : <HardDrive size={12} />}
-            {storageKind === 'remote' ? '공유 저장소(Redis)에 연결됨' : '이 기기에만 저장 중 (localStorage)'}
-          </div>
-        )}
       </div>
     </>
   );
