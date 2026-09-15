@@ -1,0 +1,403 @@
+/* ---- 공용: 필터 바 ---- */
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterHint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---- 기록 목록 ---- */
+.gameItem {
+  display: block;
+  padding: 14px 16px;
+}
+
+.gameHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gameTitle {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gameMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.typeTag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ivory);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.playerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px dashed var(--line);
+}
+
+.playerRow:first-of-type {
+  border-top: 0;
+}
+
+.playerName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerScore {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 56px;
+  text-align: right;
+}
+
+.playerUma {
+  font-size: 12px;
+  color: var(--text-faint);
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.playerPoints {
+  font-size: 15px;
+  min-width: 52px;
+  text-align: right;
+}
+
+.memo {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ivory);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---- 상세 ---- */
+.detailHero {
+  padding: 4px 16px 18px;
+  text-align: center;
+}
+
+.detailTitle {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.detailMeta {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.kv:first-of-type {
+  border-top: 0;
+}
+
+.kv span:first-child {
+  color: var(--text-muted);
+}
+
+.kv strong {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.detailRow:first-of-type {
+  border-top: 0;
+}
+
+.detailName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailScore {
+  text-align: right;
+  line-height: 1.2;
+}
+
+.detailScore small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.detailScore strong {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.detailPoints {
+  font-size: 17px;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ---- 랭킹 ---- */
+.rankingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.rankingPos {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--ivory);
+  flex: 0 0 auto;
+}
+
+.rankingBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.rankingName {
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rankingSub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.rankingSub b {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rankingPoints {
+  font-size: 19px;
+  text-align: right;
+  min-width: 64px;
+}
+
+.rankingPointsLabel {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ---- 멤버 ---- */
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.memberRowInactive {
+  opacity: 0.6;
+}
+
+.memberBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inactiveTag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--ivory);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.memberStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.memberStats b {
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.editBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+.editBtn:active {
+  background: var(--ivory);
+}
+
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.pathHint {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  background: var(--ivory);
+  padding: 6px 8px;
+  border-radius: 8px;
+  word-break: break-all;
+  color: var(--text);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+}
+
+.toggleRow strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.toggleRow p {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: #cfd5d9;
+  transition: background 0.15s;
+  flex: 0 0 auto;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s;
+}
+
+.switchOn {
+  background: var(--up);
+}
+
+.switchOn::after {
+  transform: translateX(18px);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dangerZone {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 0;
+}

@@ -1,0 +1,367 @@
+.headerBody {
+  position: relative;
+  padding: 0 16px 14px;
+  min-height: 60px;
+}
+
+.headerMascot {
+  position: absolute;
+  right: 10px;
+  bottom: -6px;
+  height: 96px;
+  width: auto;
+  max-width: 40%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+.headerHint {
+  font-size: 13px;
+  opacity: 0.85;
+  max-width: 60%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  flex: 1 1 140px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 4px 6px 4px 12px;
+  min-height: 48px;
+  color: var(--green);
+}
+
+.chipLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.chipSelect {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 8px 26px 8px 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  color: var(--text);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7680' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.dateRow {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 8px;
+}
+
+.dateChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  padding: 0 8px 0 12px;
+  min-height: 48px;
+  color: var(--green);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.dateInput {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 8px 0;
+  outline: none;
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+}
+
+.dateInput::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+
+.titleCard {
+  padding: 10px 14px;
+}
+
+.playerCard {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerCardTied {
+  box-shadow: 0 0 0 1.5px var(--gold), var(--shadow-card);
+}
+
+.playerCardInvalid {
+  box-shadow: 0 0 0 1.5px var(--red), var(--shadow-card);
+}
+
+.playerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 96px;
+  min-width: 0;
+}
+
+.playerSelect {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 8px 20px 8px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  color: var(--text);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2398a2ab' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerSelectEmpty {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.scoreWrap {
+  position: relative;
+  flex: 0 0 118px;
+}
+
+.scoreInput {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 0 30px 0 12px;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  outline: none;
+  background: var(--white);
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.scoreInput:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(7, 88, 68, 0.12);
+}
+
+.scoreInput::placeholder {
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.scoreClear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  border-radius: 8px;
+}
+
+.scoreClear:active {
+  background: var(--ivory);
+}
+
+.result {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 96px;
+  justify-content: flex-end;
+}
+
+.resultPoints {
+  font-size: 16px;
+  min-width: 52px;
+  text-align: right;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.resultPos {
+  background: var(--up-soft);
+}
+
+.resultNeg {
+  background: var(--red-soft);
+}
+
+.resultZero {
+  background: var(--ivory);
+}
+
+.resultEmpty {
+  color: var(--text-faint);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+@media (max-width: 400px) {
+  .scoreWrap {
+    flex-basis: 104px;
+  }
+  .scoreInput {
+    font-size: 16px;
+    padding-left: 10px;
+  }
+  .result {
+    min-width: 88px;
+    gap: 6px;
+  }
+  .resultPoints {
+    font-size: 15px;
+    min-width: 48px;
+    padding: 6px 6px;
+  }
+}
+
+.notice {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.noticeWarn {
+  background: #fff6e0;
+  color: #7a5a12;
+  border: 1px solid #f3dfae;
+}
+
+.noticeError {
+  background: var(--red-soft);
+  color: #8e2c24;
+  border: 1px solid #f1c9c4;
+}
+
+.notice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.swapBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 1px solid #e3cf9b;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #7a5a12;
+}
+
+.swapBtn:active {
+  background: var(--gold-soft);
+}
+
+.sumRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+.sumRow strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.memoCount {
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.saveWrap {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0 calc(10px + var(--safe-bottom));
+  margin-top: 4px;
+  background: linear-gradient(180deg, rgba(247, 241, 229, 0) 0%, var(--ivory) 30%);
+}
+
+.save {
+  min-height: 58px;
+  font-size: 18px;
+  border-radius: 16px;
+}
+
+.confirmLine {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+
+.confirmLine:last-of-type {
+  border-bottom: 0;
+}

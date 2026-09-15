@@ -1,0 +1,88 @@
+.shell {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-max);
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--ivory);
+  box-shadow: 0 0 0 1px rgba(32, 48, 57, 0.04), 0 0 40px rgba(32, 48, 57, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+}
+
+.mainNoNav {
+  padding-bottom: calc(var(--safe-bottom) + 24px);
+}
+
+/* 헤더 (녹색 마작 테이블) */
+.header {
+  position: relative;
+  background: linear-gradient(180deg, #0a6a52 0%, var(--green) 55%, #06503d 100%);
+  color: #fff;
+  padding-top: var(--safe-top);
+  border-radius: 0 0 24px 24px;
+  overflow: hidden;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.075' stroke-width='1'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0'/%3E%3Cpath d='M6 24a18 18 0 0 1 36 0'/%3E%3Cpath d='M12 24a12 12 0 0 1 24 0'/%3E%3Cpath d='M18 24a6 6 0 0 1 12 0'/%3E%3Cpath d='M-24 12a24 24 0 0 1 48 0'/%3E%3Cpath d='M-18 12a18 18 0 0 1 36 0'/%3E%3Cpath d='M-12 12a12 12 0 0 1 24 0'/%3E%3Cpath d='M-6 12a6 6 0 0 1 12 0'/%3E%3Cpath d='M24 12a24 24 0 0 1 48 0'/%3E%3Cpath d='M30 12a18 18 0 0 1 36 0'/%3E%3Cpath d='M36 12a12 12 0 0 1 24 0'/%3E%3Cpath d='M42 12a6 6 0 0 1 12 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 24px;
+}
+
+.headerInner {
+  position: relative;
+  z-index: 1;
+}
+
+.page {
+  padding: 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pageTitleBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 14px;
+  min-height: 56px;
+}
+
+.pageTitleBar h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  transition: background 0.15s;
+}
+
+.iconBtn:active {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.iconBtnSpacer {
+  width: 40px;
+  height: 40px;
+}

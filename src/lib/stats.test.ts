@@ -1,0 +1,107 @@
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_RULES } from '../config/rules';
+import type { Game, Member } from './types';
+import {
+  availableMonths,
+  computeMemberStats,
+  computeMonthlySummary,
+  computeRanking,
+  gamesInMonth,
+  monthKey,
+  previousMonthKey,
+  sortGamesDesc,
+} from './stats';
+
+const members: Member[] = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
+  id,
+  name: id.toUpperCase(),
+  active: true,
+  createdAt: '2025-01-01T00:00:00.000Z',
+}));
+
+function game(id: string, playedAt: string, playerIds: string[], scores: number[]): Game {
+  return {
+    id,
+    playedAt,
+    title: '',
+    playerCount: 4,
+    gameType: 'hanchan',
+    playerIds,
+    scores,
+    memo: '',
+    createdAt: playedAt,
+    rules: DEFAULT_RULES,
+  };
+}
+
+const g1 = game('g1', '2025-03-08T19:30:00', ['a', 'b', 'c', 'd'], [38200, 27600, 21400, 12800]);
+const g2 = game('g2', '2025-03-06T21:00:00', ['b', 'c', 'a', 'd'], [40000, 30000, 20000, 10000]);
+const g3 = game('g3', '2025-02-20T20:00:00', ['a', 'b', 'c', 'e'], [10000, 20000, 30000, 40000]);
+
+describe('월 키', () => {
+  it('로컬 시간 기준 YYYY-MM', () => {
+    expect(monthKey('2025-03-08T19:30:00')).toBe('2025-03');
+    expect(previousMonthKey('2025-03')).toBe('2025-02');
+    expect(previousMonthKey('2025-01')).toBe('2024-12');
+  });
+
+  it('월별 필터와 월 목록', () => {
+    expect(gamesInMonth([g1, g2, g3], '2025-03').map((g) => g.id)).toEqual(['g1', 'g2']);
+    expect(availableMonths([g3, g1, g2])).toEqual(['2025-03', '2025-02']);
+    expect(sortGamesDesc([g3, g2, g1]).map((g) => g.id)).toEqual(['g1', 'g2', 'g3']);
+  });
+});
+
+describe('멤버 통계', () => {
+  it('누적 우마·평균 순위·순위 횟수를 계산한다', () => {
+    const stats = computeMemberStats([g1, g2]);
+    const a = stats.get('a')!;
+    // g1: +28.2 (1위), g2: 20000 → -5-5 = -10 (3위)
+    expect(a.games).toBe(2);
+    expect(a.totalPoints).toBe(18.2);
+    expect(a.avgRank).toBe(2);
+    expect(a.rankCounts).toEqual([1, 0, 1, 0]);
+    expect(a.firstRate).toBe(50);
+
+    const d = stats.get('d')!;
+    expect(d.totalPoints).toBe(-57.2);
+    expect(d.rankCounts).toEqual([0, 0, 0, 2]);
+  });
+
+  it('대국이 없는 멤버는 빈 통계', () => {
+    const stats = computeMemberStats([], ['z']);
+    expect(stats.get('z')).toMatchObject({ games: 0, totalPoints: 0, avgRank: null });
+  });
+});
+
+describe('랭킹', () => {
+  it('누적 우마 기준으로 정렬하고 대국 없는 멤버는 제외', () => {
+    const rows = computeRanking([g1, g2], members);
+    expect(rows.map((r) => r.member.id)).toEqual(['b', 'a', 'c', 'd']);
+    expect(rows.map((r) => r.position)).toEqual([1, 2, 3, 4]);
+    expect(rows[0].totalPoints).toBe(37.6); // b: +7.6 + 30
+  });
+
+  it('월별 랭킹은 해당 월의 대국만 반영', () => {
+    const feb = computeRanking(gamesInMonth([g1, g2, g3], '2025-02'), members);
+    expect(feb.map((r) => r.member.id)).toEqual(['e', 'c', 'b', 'a']);
+    expect(feb[0].totalPoints).toBe(30);
+  });
+});
+
+describe('월 요약', () => {
+  it('지난달 대비 증감을 계산한다', () => {
+    const s = computeMonthlySummary([g1, g2, g3], 'a', '2025-03');
+    expect(s.games).toBe(2);
+    expect(s.avgRank).toEqual({ current: 2, previous: 4, delta: -2 });
+    expect(s.firstCount).toEqual({ current: 1, previous: 0, delta: 1 });
+    expect(s.lastCount).toEqual({ current: 0, previous: 1, delta: -1 });
+    expect(s.totalPoints).toEqual({ current: 18.2, previous: -30, delta: 48.2 });
+  });
+
+  it('지난달 기록이 없으면 증감은 null', () => {
+    const s = computeMonthlySummary([g1, g2], 'a', '2025-03');
+    expect(s.avgRank.delta).toBeNull();
+    expect(s.totalPoints.delta).toBeNull();
+  });
+});

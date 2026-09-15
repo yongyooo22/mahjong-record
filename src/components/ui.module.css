@@ -1,0 +1,583 @@
+/* ---------- Card ---------- */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.cardTight {
+  padding: 12px 14px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sectionHead h2 {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.01em;
+}
+
+.sectionHead h2 svg {
+  color: var(--gold);
+}
+
+.sectionRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0 4px 6px;
+  border-radius: 8px;
+}
+
+.sectionRight:active {
+  opacity: 0.6;
+}
+
+/* ---------- Button ---------- */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: var(--radius-btn);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  transition: transform 0.12s ease, filter 0.12s ease, opacity 0.12s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.94);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.btnFull {
+  width: 100%;
+}
+
+.btnSm {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+.btnPrimary {
+  background: linear-gradient(180deg, #0a5b47 0%, var(--green-dark) 100%);
+  color: #fff;
+  border: 1.5px solid var(--gold);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), var(--shadow-float);
+}
+
+.btnDanger {
+  background: linear-gradient(180deg, #a83c2f 0%, #8e2c24 100%);
+  color: #fff;
+  border: 1.5px solid var(--gold);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 22px rgba(142, 44, 36, 0.28);
+}
+
+.btnPrimary:disabled,
+.btnDanger:disabled {
+  background: #b9c2bf;
+  border-color: #d8dcd9;
+  color: #fff;
+  box-shadow: none;
+}
+
+.btnDanger:disabled {
+  background: #cfb8b5;
+  border-color: #e3d5d3;
+}
+
+.btnOutline {
+  background: var(--white);
+  color: var(--green);
+  border: 1.5px solid var(--green);
+}
+
+.btnOutline:disabled {
+  opacity: 0.45;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btnGhost:disabled {
+  opacity: 0.45;
+}
+
+.btnRed {
+  background: var(--white);
+  color: var(--red);
+  border: 1.5px solid var(--red);
+}
+
+.btnRed:disabled {
+  opacity: 0.45;
+}
+
+.btnLoading {
+  color: transparent !important;
+}
+
+.spinner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinnerDark {
+  border-color: rgba(32, 48, 57, 0.2);
+  border-top-color: var(--text);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 금색 구름 장식 — 주요 버튼에만 */
+.deco {
+  position: absolute;
+  width: 34px;
+  height: 18px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.decoLeft {
+  left: 10px;
+  bottom: 5px;
+}
+
+.decoRight {
+  right: 10px;
+  top: 5px;
+  transform: rotate(180deg);
+}
+
+/* ---------- Avatar ---------- */
+.avatar {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--ivory-dark);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(32, 48, 57, 0.15);
+}
+
+/* ---------- Rank badge ---------- */
+.rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+}
+
+.rankMd {
+  width: 36px;
+  height: 36px;
+  font-size: 12px;
+}
+
+.rankSm {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+
+.rankPill {
+  border-radius: 999px;
+  width: auto;
+  padding: 0 8px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.rank1 {
+  background: linear-gradient(160deg, #f1cd6d, #d3a640);
+}
+
+.rank2 {
+  background: linear-gradient(160deg, #c7cdd3, #9ea6ae);
+}
+
+.rank3 {
+  background: linear-gradient(160deg, #d8a06f, #b5764a);
+}
+
+.rank4 {
+  background: linear-gradient(160deg, #c8cdd2, #a8afb6);
+}
+
+/* ---------- Points ---------- */
+.points {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Delta ---------- */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.deltaHint {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+/* ---------- Chips / segmented ---------- */
+.seg {
+  display: inline-flex;
+  background: var(--ivory-dark);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.segBtn {
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.segBtnActive {
+  background: var(--white);
+  color: var(--green);
+  box-shadow: 0 1px 3px rgba(32, 48, 57, 0.12);
+}
+
+/* ---------- Modal ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 30, 28, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  animation: fade 0.15s ease;
+}
+
+@media (min-width: 560px) {
+  .overlay {
+    align-items: center;
+  }
+}
+
+.modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 20px 18px 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  animation: rise 0.18s ease;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+}
+
+.modalTitle {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalBody {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.modalActions > * {
+  flex: 1;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+  background: linear-gradient(90deg, #ece5d6 25%, #f5efe3 50%, #ece5d6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+  border-radius: 10px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Empty / Error ---------- */
+.empty {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  border-radius: 16px;
+  background: var(--ivory);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+}
+
+.emptyTitle {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* ---------- Form ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.labelOptional {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-faint);
+}
+
+.input {
+  width: 100%;
+  min-height: 46px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--white);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(7, 88, 68, 0.12);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.textarea {
+  min-height: 84px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.help {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.helpError {
+  color: var(--red);
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectWrap svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+.select {
+  padding-right: 34px;
+}
+
+/* ---------- Bottom nav ---------- */
+.nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.navInner {
+  pointer-events: auto;
+  width: 100%;
+  max-width: var(--app-max);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 6px 8px calc(6px + var(--safe-bottom));
+  min-height: calc(var(--nav-height) + var(--safe-bottom));
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border-radius: 14px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navItem:active {
+  background: var(--ivory);
+}
+
+.navItemActive {
+  color: var(--green);
+  background: #e4efe9;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
+  transform: translateX(-50%);
+  z-index: 60;
+  background: var(--green-dark);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  max-width: calc(100vw - 32px);
+  animation: rise 0.18s ease;
+}
+
+/* ---------- Month picker ---------- */
+.month {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 2px;
+}
+
+.monthBtn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--text-muted);
+}
+
+.monthBtn:active:not(:disabled) {
+  background: var(--ivory);
+}
+
+.monthBtn:disabled {
+  opacity: 0.3;
+}
+
+.monthLabel {
+  min-width: 92px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
