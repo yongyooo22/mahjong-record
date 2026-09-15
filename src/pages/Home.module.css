@@ -16,8 +16,8 @@
   align-items: center;
   justify-content: center;
   color: var(--green);
-  font-family: 'Noto Serif KR', 'Apple Myungjo', 'Nanum Myeongjo', serif;
-  font-weight: 800;
+  font-family: 'Noto Serif KR', 'Apple Myungjo', 'Nanum Myeongjo', 'Noto Serif CJK KR', serif;
+  font-weight: 900;
   font-size: 22px;
   transform: rotate(-6deg);
   flex: 0 0 auto;
