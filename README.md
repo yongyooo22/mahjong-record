@@ -95,14 +95,17 @@ Redis 에는 다음 두 키만 사용합니다.
 
 | 용도 | 경로 |
 | --- | --- |
-| 홈 마스코트 | `public/images/mascot/home.png` |
-| 기록 화면 마스코트 | `public/images/mascot/record.png` |
+| 홈 상단 배경 | `public/images/bg/home.webp` (가로 2:1) |
+| 기록 화면 상단 배경 | `public/images/bg/record.webp` (가로 2:1) |
+| 홈 마스코트 | `public/images/mascot/home.png` (투명 배경) |
+| 기록 화면 마스코트 | `public/images/mascot/record.png` (투명 배경) |
 | 멤버 아바타 후보 | `public/images/avatars/*.png` (파일명 자유) |
 
 - `public/images/avatars/` 에 넣은 PNG 는 빌드 시 자동으로 수집되어 멤버 추가·수정 화면의 **캐릭터** 선택 격자에 나타납니다. 파일을 추가하고 다시 배포하면 바로 고를 수 있습니다.
 - 멤버가 아직 캐릭터를 고르지 않았으면 `<멤버ID>.png` 파일이 있을 때 그 파일을 씁니다. 초기 멤버의 ID 는 `yeonkyung`(연경), `youngsik`(영식), `sowon`(소원), `chanyoung`(찬영) 입니다.
 - 이미지가 없거나 로드에 실패하면 아바타 영역은 숨겨지고 이름만 표시되며, 마스코트가 없으면 여백만 남습니다.
-- 마스코트는 투명 배경 PNG 를 권장하고, 아바타는 정사각형(예: 240×240)을 권장합니다.
+- 마스코트는 투명 배경 PNG 를 권장하고, 아바타는 정사각형(예: 512×512)을 권장합니다.
+- 용량: 배경은 1600px WebP, 마스코트는 700px, 아바타는 512px 팔레트 PNG 로 줄여 두었습니다 (한 장에 30~250KB). 새 그림을 올릴 때도 비슷하게 줄이면 폰에서 빠르게 뜹니다.
 
 ## 정산 규칙 바꾸기
 

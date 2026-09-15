@@ -2,8 +2,10 @@
  * 이미지 경로 규칙을 한 곳에서 관리합니다.
  * 실제 이미지 파일은 GitHub 저장소의 public/images/ 아래에 직접 넣어 주세요.
  *
- *   public/images/mascot/home.png     → 홈 화면 히어로 마스코트
- *   public/images/mascot/record.png   → 대국 기록 화면 마스코트
+ *   public/images/bg/home.webp        → 홈 화면 상단 배경 (가로 2:1)
+ *   public/images/bg/record.webp      → 대국 기록 화면 상단 배경 (가로 2:1)
+ *   public/images/mascot/home.png     → 홈 화면 마스코트 (투명 배경 PNG)
+ *   public/images/mascot/record.png   → 대국 기록 화면 마스코트 (투명 배경 PNG)
  *   public/images/avatars/*.png       → 멤버 아바타 후보 (멤버 화면에서 골라서 지정)
  */
 import avatarFiles from 'virtual:avatar-files';
@@ -16,6 +18,17 @@ export const MASCOT_IMAGES = {
 } as const;
 
 export type MascotKey = keyof typeof MASCOT_IMAGES;
+
+/** 녹색 헤더 뒤에 깔리는 배경 그림. 없거나 못 불러오면 기존 녹색 그라데이션만 보입니다. */
+export const BG_IMAGES = {
+  home: `${IMAGE_BASE}/bg/home.webp`,
+  record: `${IMAGE_BASE}/bg/record.webp`,
+} as const;
+
+/** 헤더에 배경 그림을 까는 inline style (CSS 변수로 전달) */
+export function headerBgStyle(key: keyof typeof BG_IMAGES): React.CSSProperties {
+  return { ['--header-bg' as string]: `url(${BG_IMAGES[key]})` };
+}
 
 export const AVATAR_DIR = `${IMAGE_BASE}/avatars`;
 

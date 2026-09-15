@@ -12,6 +12,7 @@ import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
+import { headerBgStyle } from '../config/images';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
 import { computeResults, formatPoints } from '../lib/scoring';
 import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
@@ -24,7 +25,7 @@ const APP_SUBTITLE = '대국 기록 · 랭킹 · 통계';
 
 function HomeHeader() {
   return (
-    <header className={app.header}>
+    <header className={[app.header, app.headerImage].join(' ')} style={headerBgStyle('home')}>
       <div className={app.headerInner}>
         <div className={s.top}>
           <div className={s.logo} aria-hidden="true">

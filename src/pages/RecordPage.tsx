@@ -10,6 +10,7 @@ import { PageHeader } from '../components/PageHeader';
 import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
 import { useToast } from '../components/Toast';
+import { headerBgStyle } from '../config/images';
 import { DEFAULT_PLACES, mergePlaces, PLACE_MAX_LENGTH, readCustomPlaces, saveCustomPlace } from '../config/places';
 import { DEFAULT_RULES, GAME_TYPE_LABEL, type GameType } from '../config/rules';
 import { YAKUMAN_MAX_PER_GAME, YAKUMAN_NAME_MAX_LENGTH, YAKUMAN_NAMES, YAKUMAN_OTHER } from '../config/yakuman';
@@ -200,7 +201,7 @@ export function RecordPage() {
 
   return (
     <>
-      <PageHeader title="대국 기록하기" back>
+      <PageHeader title="대국 기록하기" back className={app.headerImage} style={headerBgStyle('record')}>
         <div className={s.headerBody}>
           <p className={s.headerHint}>점수를 입력하면 순위와 우마가 바로 계산돼요.</p>
           <Mascot name="record" className={s.headerMascot} />
