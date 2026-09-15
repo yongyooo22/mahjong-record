@@ -68,7 +68,7 @@ export function RankingPage() {
             {rows.map((row) => (
               <Card key={row.member.id} className={s.rankingRow} tight>
                 {row.position <= 3 ? <RankBadge rank={row.position} /> : <span className={s.rankingPos}>{row.position}위</span>}
-                <Avatar member={row.member} size={40} />
+                <Avatar member={row.member} size={40} crown={row.position === 1} />
                 <div className={s.rankingBody}>
                   <div className={s.rankingName}>{row.member.name}</div>
                   <div className={s.rankingSub}>

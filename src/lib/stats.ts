@@ -184,6 +184,8 @@ export interface GroupSummary {
   games: StatDelta;
   /** 가장 많이 참여한 멤버 (value = 참여 횟수) */
   mostActive: TopMember | null;
+  /** 누적 우마가 가장 높은 멤버 (value = 누적 우마) */
+  bestTotal: TopMember | null;
   /** 대국당 평균 우마가 가장 높은 멤버 (value = 평균 우마) */
   bestAverage: TopMember | null;
   /** 1위를 가장 많이 한 멤버 (value = 1위 횟수) */
@@ -219,6 +221,7 @@ export function computeGroupSummary(games: Game[], month: string): GroupSummary 
     month,
     games: delta(cur.length, prev.length > 0 ? prev.length : null),
     mostActive: topMembers(stats, (s) => s.games),
+    bestTotal: topMembers(stats, (s) => s.totalPoints),
     bestAverage: topMembers(stats, (s) => s.avgPoints),
     topFirst: topMembers(stats, (s) => (s.rankCounts[0] > 0 ? s.rankCounts[0] : null)),
   };

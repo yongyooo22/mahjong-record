@@ -44,34 +44,20 @@
   margin-top: 2px;
 }
 
-.bell {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  color: #fff;
-  flex: 0 0 auto;
-}
-
-.bell:active {
-  background: rgba(255, 255, 255, 0.14);
-}
-
 .hero {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  min-height: 118px;
-  padding: 0 18px 34px;
+  min-height: 78px;
+  margin-top: -34px;
+  padding: 0 18px 32px;
 }
 
 .heroImg {
-  max-height: 112px;
+  max-height: 108px;
   width: auto;
-  max-width: 44%;
+  max-width: 42%;
   object-fit: contain;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
 }
@@ -283,7 +269,7 @@
 .recentPlayer {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 13px;
   font-weight: 600;
 }

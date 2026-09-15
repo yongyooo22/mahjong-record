@@ -1,4 +1,4 @@
-import { Bell, ChevronRight, Clock, Coins, Crown, Dices, Flame, PenLine, Sparkles, Trophy, UserRound } from 'lucide-react';
+import { ChevronRight, Clock, Coins, Dices, Flame, PenLine, Sparkles, TrendingUp, Trophy, UserRound } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -9,6 +9,7 @@ import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { Mascot } from '../components/Mascot';
 import { Points } from '../components/Points';
+import { CrownMark } from '../components/CrownMark';
 import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
@@ -35,9 +36,6 @@ function HomeHeader() {
             <h1 className={s.appName}>마작 고수들의 모임</h1>
             <p className={s.subtitle}>{APP_SUBTITLE}</p>
           </div>
-          <button type="button" className={s.bell} aria-label="알림 (준비 중)">
-            <Bell size={22} />
-          </button>
         </div>
         <div className={s.hero}>
           <Mascot name="home" className={s.heroImg} fallbackClassName={s.heroEmpty} />
@@ -48,16 +46,14 @@ function HomeHeader() {
 }
 
 /**
- * 이름을 값으로 쓰는 통계 카드 값 (최다 참여 / 평균 우마 1위 / 1위 최다).
- * 동률이면 이름을 나란히 적고, 대국한 사람 전원이 같으면 "전원 동률" 로 보여줍니다.
+ * 이름을 값으로 쓰는 통계 카드 값 (최다 참여 / 누적 우마 1위 / 평균 우마 1위).
+ * 동률이면 이름을 모두 나열합니다 (여러 줄로 줄바꿈).
  */
 function NameStat({ top, nameOf }: { top: TopMember | null; nameOf: (id: string) => string }) {
   if (!top) return <span className={ui.statValueText}>-</span>;
-  const n = top.memberIds.length;
-  if (n === 1) return <span className={ui.statValueText}>{nameOf(top.memberIds[0])}</span>;
-  if (n >= 2 && n === top.candidates) return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>전원 동률</span>;
-  if (n <= 3) return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{top.memberIds.map(nameOf).join(' · ')}</span>;
-  return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{n}명 동률</span>;
+  const names = top.memberIds.map(nameOf);
+  if (names.length === 1) return <span className={ui.statValueText}>{names[0]}</span>;
+  return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{names.join(' · ')}</span>;
 }
 
 /**
@@ -149,16 +145,16 @@ export function HomePage() {
               <StatCard
                 icon={<Coins size={18} color="#075844" />}
                 tone="#e4efe9"
+                label="누적 우마 1위"
+                value={<NameStat top={summary.bestTotal} nameOf={nameOf} />}
+                sub={summary.bestTotal ? `누적 ${formatPoints(summary.bestTotal.value)}` : '아직 없음'}
+              />
+              <StatCard
+                icon={<TrendingUp size={18} color="#075844" />}
+                tone="#e4efe9"
                 label="평균 우마 1위"
                 value={<NameStat top={summary.bestAverage} nameOf={nameOf} />}
                 sub={summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
-              />
-              <StatCard
-                icon={<Crown size={18} color="#b9861f" />}
-                tone="#fbf0d0"
-                label="1위 최다"
-                value={<NameStat top={summary.topFirst} nameOf={nameOf} />}
-                sub={summary.topFirst ? `${summary.topFirst.value}회 1위` : '아직 없음'}
               />
             </StatGrid>
           )}
@@ -175,7 +171,7 @@ export function HomePage() {
             ranking.map((row) => (
               <div key={row.member.id} className={s.rankRow}>
                 <RankBadge rank={row.position} pill />
-                <Avatar member={row.member} size={34} />
+                <Avatar member={row.member} size={34} crown={row.position === 1} />
                 <div className={s.rankName}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.member.name}</span>
                   {row.position === 1 && <span className={s.mvp}>MVP</span>}
@@ -223,6 +219,7 @@ export function HomePage() {
                       {ordered.map((r) => (
                         <span key={r.index} className={s.recentPlayer}>
                           <RankBadge rank={r.rank} size="sm" />
+                          {r.rank === 1 && <CrownMark size={13} />}
                           <span>{memberMap.get(g.playerIds[r.index])?.name ?? '?'}</span>
                         </span>
                       ))}

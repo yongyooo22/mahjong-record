@@ -1,9 +1,10 @@
-import { ChevronDown, Coins, Crown, Dices, FileText, PieChart, Sparkles, UserRound, Users } from 'lucide-react';
+import { ChevronDown, Coins, Crown, Dices, FileText, PieChart, Sparkles, TrendingUp, UserRound, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card, SectionHeader } from '../components/Card';
+import { CrownMark } from '../components/CrownMark';
 import { Delta } from '../components/Delta';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
@@ -155,19 +156,14 @@ export function MyPage() {
                     sub={monthly ? <Delta delta={monthly.firstCount.delta} digits={0} /> : `1위율 ${stats.firstRate}%`}
                   />
                   <StatCard
-                    icon={<span style={{ fontFamily: 'serif', fontWeight: 800, color: '#C83D32', fontSize: 16, lineHeight: 1 }}>中</span>}
-                    tone="#fbeae8"
-                    label="라스 횟수"
-                    value={
-                      <>
-                        {stats.rankCounts[3]}
-                        <small>회</small>
-                      </>
-                    }
-                    sub={monthly ? <Delta delta={monthly.lastCount.delta} lowerIsBetter digits={0} /> : `${stats.games}국 중`}
+                    icon={<Coins size={18} color="#075844" />}
+                    tone="#e4efe9"
+                    label="누적 우마"
+                    value={<span className={stats.totalPoints > 0 ? 'pos' : stats.totalPoints < 0 ? 'neg' : ''}>{formatPoints(stats.totalPoints)}</span>}
+                    sub={monthly ? <Delta delta={monthly.totalPoints.delta} digits={1} /> : '정산 점수 합계'}
                   />
                   <StatCard
-                    icon={<Coins size={18} color="#075844" />}
+                    icon={<TrendingUp size={18} color="#075844" />}
                     tone="#e4efe9"
                     label="평균 우마"
                     value={
@@ -177,7 +173,7 @@ export function MyPage() {
                         <span className={stats.avgPoints > 0 ? 'pos' : stats.avgPoints < 0 ? 'neg' : ''}>{formatPoints(stats.avgPoints)}</span>
                       )
                     }
-                    sub={monthly ? <Delta delta={monthly.avgPoints.delta} digits={1} /> : `누적 ${formatPoints(stats.totalPoints)}`}
+                    sub={monthly ? <Delta delta={monthly.avgPoints.delta} digits={1} /> : `${stats.games}국 평균`}
                   />
                 </StatGrid>
               )}
@@ -194,7 +190,10 @@ export function MyPage() {
                     const pct = Math.round((count / stats.games) * 100);
                     return (
                       <div key={i} className={s.distRow}>
-                        <span className={s.distLabel}>{RANK_LABEL[i]}</span>
+                        <span className={s.distLabel}>
+                          {i === 0 && <CrownMark size={13} />}
+                          {RANK_LABEL[i]}
+                        </span>
                         <div className={s.distTrack}>
                           <div className={[s.distBar, s[`distBar${i + 1}`]].join(' ')} style={{ width: `${pct}%` }} />
                         </div>
@@ -233,6 +232,7 @@ export function MyPage() {
                           )}
                         </div>
                       </div>
+                      {rank === 1 && <CrownMark size={14} />}
                       <RankBadge rank={rank} size="sm" />
                       <Points value={points} className={s.myGamePoints} />
                     </Link>

@@ -43,7 +43,7 @@ export function GameCard({ game }: { game: Game }) {
           return (
             <div key={r.index} className={s.playerRow}>
               <RankBadge rank={r.rank} size="sm" />
-              {member && <Avatar member={member} size={28} />}
+              {member && <Avatar member={member} size={28} crown={r.rank === 1} />}
               <span className={s.playerName}>{member?.name ?? '(삭제된 멤버)'}</span>
               <span className={s.playerScore}>{formatScore(r.score)}</span>
               <span className={s.playerUma}>우마 {formatPoints(r.uma)}</span>

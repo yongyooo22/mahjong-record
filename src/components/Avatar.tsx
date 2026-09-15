@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { avatarUrl } from '../config/images';
+import { CrownMark } from './CrownMark';
 import type { Member } from '../lib/types';
 import s from './ui.module.css';
 
@@ -12,20 +13,22 @@ interface Props {
   className?: string;
   /** 이미지 표시 여부가 바뀔 때 알려줍니다 (레이아웃 조정용) */
   onLoadState?: (visible: boolean) => void;
+  /** 1위 왕관을 머리 위에 씌웁니다 */
+  crown?: boolean;
 }
 
 /**
  * 원형 아바타. 이미지가 없거나 로드에 실패하면 아무것도 그리지 않습니다
  * (이니셜이나 대체 그림 없이 영역 자체를 숨김).
  */
-export function Avatar({ member, size = 40, className, onLoadState }: Props) {
+export function Avatar({ member, size = 40, className, onLoadState, crown = false }: Props) {
   const url = avatarUrl(member);
   const [error, setError] = useState(() => failed.has(url));
   useEffect(() => {
     onLoadState?.(!error);
   }, [error, onLoadState]);
-  if (error) return null;
-  return (
+  if (error) return crown ? <CrownMark size={Math.max(12, Math.round(size * 0.4))} /> : null;
+  const img = (
     <img
       src={url}
       alt=""
@@ -40,5 +43,12 @@ export function Avatar({ member, size = 40, className, onLoadState }: Props) {
         setError(true);
       }}
     />
+  );
+  if (!crown) return img;
+  return (
+    <span className={s.avatarWrap} style={{ width: size, height: size }}>
+      {img}
+      <CrownMark size={Math.max(12, Math.round(size * 0.42))} className={s.avatarCrown} />
+    </span>
   );
 }

@@ -80,9 +80,12 @@
 }
 
 .distLabel {
-  flex: 0 0 64px;
+  flex: 0 0 68px;
   font-size: 13px;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .distTrack {

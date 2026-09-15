@@ -75,7 +75,7 @@ export function GameDetailPage() {
                 return (
                   <div key={r.index} className={s.detailRow}>
                     <RankBadge rank={r.rank} />
-                    {member && <Avatar member={member} size={36} />}
+                    {member && <Avatar member={member} size={36} crown={r.rank === 1} />}
                     <span className={s.detailName}>{member?.name ?? '(삭제된 멤버)'}</span>
                     <div className={s.detailScore}>
                       <strong>{formatScore(r.score)}</strong>
