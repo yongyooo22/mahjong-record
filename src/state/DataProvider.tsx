@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { createStorage, type StorageAdapter } from '../lib/storage';
+import { bootstrapStorage, type StorageAdapter } from '../lib/storage';
 import type { Game, Member, MemberPatch, NewGame, NewMember } from '../lib/types';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -7,7 +7,6 @@ type Status = 'loading' | 'ready' | 'error';
 interface DataContextValue {
   status: Status;
   error: string | null;
-  storageKind: 'remote' | 'local' | null;
   members: Member[];
   games: Game[];
   retry: () => void;
@@ -32,7 +31,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const storageRef = useRef<StorageAdapter | null>(null);
   const [status, setStatus] = useState<Status>('loading');
   const [error, setError] = useState<string | null>(null);
-  const [storageKind, setStorageKind] = useState<'remote' | 'local' | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [attempt, setAttempt] = useState(0);
@@ -43,11 +41,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setError(null);
     (async () => {
       try {
-        const storage = storageRef.current ?? (await createStorage());
-        storageRef.current = storage;
-        const [m, g] = await Promise.all([storage.listMembers(), storage.listGames()]);
+        const storage = storageRef.current;
+        const { members: m, games: g, storage: s } = storage
+          ? { storage, ...(await storage.load()) }
+          : await bootstrapStorage();
         if (cancelled) return;
-        setStorageKind(storage.kind);
+        storageRef.current = s;
         setMembers(m);
         setGames(g);
         setStatus('ready');
@@ -97,8 +96,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<DataContextValue>(
-    () => ({ status, error, storageKind, members, games, retry, addGame, deleteGame, addMember, updateMember }),
-    [status, error, storageKind, members, games, retry, addGame, deleteGame, addMember, updateMember],
+    () => ({ status, error, members, games, retry, addGame, deleteGame, addMember, updateMember }),
+    [status, error, members, games, retry, addGame, deleteGame, addMember, updateMember],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

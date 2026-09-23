@@ -12,13 +12,11 @@ export function SectionHeader({
   title,
   right,
   to,
-  onRightClick,
 }: {
   icon?: ReactNode;
   title: ReactNode;
   right?: ReactNode;
   to?: string;
-  onRightClick?: () => void;
 }) {
   const rightNode =
     right === undefined ? null : to ? (
@@ -26,11 +24,6 @@ export function SectionHeader({
         {right}
         <ChevronRight size={16} />
       </Link>
-    ) : onRightClick ? (
-      <button type="button" className={s.sectionRight} onClick={onRightClick}>
-        {right}
-        <ChevronRight size={16} />
-      </button>
     ) : (
       <span className={s.sectionRight}>{right}</span>
     );

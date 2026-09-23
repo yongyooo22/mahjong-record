@@ -27,8 +27,3 @@ export const GAME_TYPE_LABEL: Record<GameType, string> = {
   hanchan: '반장전',
   tonpuu: '동풍전',
 };
-
-/** 4인 대국의 정상적인 점수 합계 (시작 점수 × 인원) */
-export function expectedTotal(rules: ScoringRules, playerCount: number): number {
-  return rules.startPoints * playerCount;
-}

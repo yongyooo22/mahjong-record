@@ -1,12 +1,13 @@
 import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
-import { StorageError, type StorageAdapter } from './StorageAdapter';
+import { StorageError, type Snapshot, type StorageAdapter } from './StorageAdapter';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(path, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
+      // Accept 를 명시해야 vite 단독 실행(API 없음)에서 index.html 대신 404 를 받아 localStorage 폴백을 탈 수 있습니다.
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     });
   } catch {
     throw new StorageError('서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.');
@@ -27,6 +28,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
         : `요청에 실패했습니다. (${res.status})`;
     throw new StorageError(message, res.status);
   }
+  if (!(res.headers.get('content-type') ?? '').includes('application/json')) {
+    // 200 인데 JSON 이 아니면 SPA 리라이트로 index.html 이 온 것 = 이 환경에 /api 가 없음 (vite 단독 실행) → 404 로 취급
+    throw new StorageError('서버 API 가 없습니다.', 404);
+  }
   return body as T;
 }
 
@@ -34,8 +39,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export class RemoteStorageAdapter implements StorageAdapter {
   readonly kind = 'remote' as const;
 
-  listMembers(): Promise<Member[]> {
-    return request<Member[]>('/api/members');
+  load(): Promise<Snapshot> {
+    return request<Snapshot>('/api/bootstrap');
   }
 
   addMember(input: NewMember): Promise<Member> {
@@ -49,10 +54,6 @@ export class RemoteStorageAdapter implements StorageAdapter {
     });
   }
 
-  listGames(): Promise<Game[]> {
-    return request<Game[]>('/api/games');
-  }
-
   addGame(input: NewGame): Promise<Game> {
     return request<Game>('/api/games', { method: 'POST', body: JSON.stringify(input) });
   }
@@ -62,14 +63,11 @@ export class RemoteStorageAdapter implements StorageAdapter {
   }
 }
 
-/** 서버 API 가 Redis 와 연결되어 있는지 확인 */
-export async function probeRemote(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/health', { headers: { Accept: 'application/json' } });
-    if (!res.ok) return false;
-    const body = (await res.json()) as { ok?: boolean; storage?: string };
-    return body.ok === true && body.storage === 'redis';
-  } catch {
-    return false;
-  }
+/**
+ * 서버 저장소를 쓸 수 없는 상황인지 (→ localStorage 폴백).
+ * 404: /api 자체가 없음 (vite 단독 실행), 503: Redis 환경 변수 미설정.
+ * 그 밖의 오류(네트워크 끊김 등)는 폴백하지 않고 화면에 알려 다시 시도하게 합니다.
+ */
+export function isRemoteUnavailable(err: unknown): boolean {
+  return err instanceof StorageError && (err.status === 404 || err.status === 503);
 }

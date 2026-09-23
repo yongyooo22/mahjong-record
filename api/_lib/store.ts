@@ -14,7 +14,7 @@ export interface Store {
   deleteGame(id: string): Promise<boolean>;
 }
 
-export function redisEnv(): { url: string; token: string } | null {
+function redisEnv(): { url: string; token: string } | null {
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!url || !token) return null;
@@ -92,13 +92,25 @@ function seedMembers(): Member[] {
 }
 
 /**
- * 멤버 목록을 읽고, 비어 있으면 초기 멤버를 한 번만 시드합니다.
+ * 저장된 멤버가 없으면 초기 멤버를 한 번만 시드합니다.
  * 예전 초기 멤버가 손대지 않은 채 남아 있고 대국 기록도 없으면 새 초기 멤버로 교체합니다.
+ * (대국 목록은 예전 초기 멤버일 때만 필요하므로 지연 조회)
  */
-export async function loadMembers(store: Store): Promise<Member[]> {
-  const existing = await store.getMembers();
-  if (existing && !(isUntouchedLegacySeed(existing) && (await store.getGames()).length === 0)) return existing;
+async function seedIfNeeded(store: Store, existing: Member[] | null, games: () => Promise<Game[]>): Promise<Member[]> {
+  if (existing && !(isUntouchedLegacySeed(existing) && (await games()).length === 0)) return existing;
   const seeded = seedMembers();
   await store.setMembers(seeded);
   return seeded;
+}
+
+/** 멤버 목록 (없으면 시드) */
+export async function loadMembers(store: Store): Promise<Member[]> {
+  return seedIfNeeded(store, await store.getMembers(), () => store.getGames());
+}
+
+/** 첫 화면용: 멤버와 대국을 한 번에 병렬로 읽습니다 (Redis 왕복 1회분 시간). */
+export async function loadMembersAndGames(store: Store): Promise<{ members: Member[]; games: Game[] }> {
+  const [existing, games] = await Promise.all([store.getMembers(), store.getGames()]);
+  const members = await seedIfNeeded(store, existing, async () => games);
+  return { members, games };
 }

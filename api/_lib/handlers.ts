@@ -2,12 +2,19 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Game, Member, Yakuman } from '../../src/lib/types';
 import { normalizeGame } from './normalize';
 import { generateId, HttpError, methodNotAllowed, paramString, parseBody, withStore } from './http';
-import { loadMembers, type Store } from './store';
+import { loadMembers, loadMembersAndGames, type Store } from './store';
 
 const GAME_TYPES = new Set(['hanchan', 'tonpuu']);
 const PLACE_MAX = 40;
 const YAKUMAN_NAME_MAX = 40;
 const YAKUMAN_MAX = 8;
+
+/** 저장된 대국을 현재 스키마로 맞추고 최신순으로 정렬 */
+function presentGames(games: Game[]): Game[] {
+  const list = games.map(normalizeGame);
+  list.sort((a, b) => (a.playedAt < b.playedAt ? 1 : a.playedAt > b.playedAt ? -1 : 0));
+  return list;
+}
 
 function str(v: unknown, max = 200): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : '';
@@ -74,6 +81,20 @@ function validateGame(input: Record<string, unknown>, members: Member[]): Omit<G
   };
 }
 
+/**
+ * GET /api/bootstrap — 앱 첫 로딩용. 멤버와 대국을 서버리스 함수 호출 한 번으로 돌려줍니다.
+ * (멤버·대국을 따로 부르면 함수 콜드 스타트가 두 번 겹쳐 첫 화면이 느려집니다.)
+ */
+export const bootstrapHandler = (resolveStore?: () => Store | null) =>
+  withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
+    if (req.method !== 'GET') {
+      methodNotAllowed(res, ['GET']);
+      return;
+    }
+    const { members, games } = await loadMembersAndGames(store);
+    res.status(200).json({ members, games: presentGames(games) });
+  }, resolveStore);
+
 /** GET /api/members, POST /api/members */
 export const membersHandler = (resolveStore?: () => Store | null) =>
   withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
@@ -133,9 +154,7 @@ export const memberByIdHandler = (resolveStore?: () => Store | null) =>
 export const gamesHandler = (resolveStore?: () => Store | null) =>
   withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
     if (req.method === 'GET') {
-      const games = (await store.getGames()).map(normalizeGame);
-      games.sort((a, b) => (a.playedAt < b.playedAt ? 1 : a.playedAt > b.playedAt ? -1 : 0));
-      res.status(200).json(games);
+      res.status(200).json(presentGames(await store.getGames()));
       return;
     }
     if (req.method === 'POST') {

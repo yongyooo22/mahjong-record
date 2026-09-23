@@ -2,7 +2,7 @@ import { normalizeGame } from '../../../api/_lib/normalize';
 import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../../config/seedMembers';
 import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
 import { generateId } from './ids';
-import { StorageError, type StorageAdapter } from './StorageAdapter';
+import { StorageError, type Snapshot, type StorageAdapter } from './StorageAdapter';
 
 const MEMBERS_KEY = 'mahjong.members';
 const GAMES_KEY = 'mahjong.games';
@@ -47,8 +47,8 @@ export class LocalStorageAdapter implements StorageAdapter {
     return (readJson<Game[]>(this.store, GAMES_KEY) ?? []).map(normalizeGame);
   }
 
-  async listMembers(): Promise<Member[]> {
-    return this.members();
+  async load(): Promise<Snapshot> {
+    return { members: this.members(), games: this.games() };
   }
 
   async addMember(input: NewMember): Promise<Member> {
@@ -83,10 +83,6 @@ export class LocalStorageAdapter implements StorageAdapter {
     next[idx] = updated;
     writeJson(this.store, MEMBERS_KEY, next);
     return updated;
-  }
-
-  async listGames(): Promise<Game[]> {
-    return this.games();
   }
 
   async addGame(input: NewGame): Promise<Game> {

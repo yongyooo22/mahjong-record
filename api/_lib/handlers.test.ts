@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { Game } from '../../src/lib/types';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RULES } from '../../src/config/rules';
-import { gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler } from './handlers';
+import { bootstrapHandler, gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler } from './handlers';
 import { MemoryStore } from './store';
 
 function mockReq(method: string, opts: { body?: unknown; query?: Record<string, string> } = {}) {
@@ -46,6 +47,27 @@ describe('API 핸들러', () => {
     const { res, out } = mockRes();
     await membersHandler(() => null)(mockReq('GET'), res);
     expect(out.status).toBe(503);
+  });
+
+  it('GET /api/bootstrap 은 멤버(첫 호출엔 시드)와 대국을 한 번에 최신순으로 돌려준다', async () => {
+    const store = new MemoryStore();
+    const older = { ...validGame, id: 'g-1', playedAt: '2025-03-01T10:00:00.000Z', createdAt: '2025-03-01T10:00:00.000Z' } as Game;
+    const newer = { ...validGame, id: 'g-2', playedAt: '2025-03-08T10:00:00.000Z', createdAt: '2025-03-08T10:00:00.000Z' } as Game;
+    await store.putGame(older);
+    await store.putGame(newer);
+    const { res, out } = mockRes();
+    await bootstrapHandler(() => store)(mockReq('GET'), res);
+    expect(out.status).toBe(200);
+    const body = out.body as { members: { name: string }[]; games: { id: string }[] };
+    expect(body.members.map((m) => m.name)).toEqual(['연경', '영식', '소원', '찬영']);
+    expect(body.games.map((g) => g.id)).toEqual(['g-2', 'g-1']);
+    expect(store.members?.length).toBe(4);
+  });
+
+  it('GET /api/bootstrap 은 GET 외의 메서드를 거부한다', async () => {
+    const { res, out } = mockRes();
+    await bootstrapHandler(() => new MemoryStore())(mockReq('POST'), res);
+    expect(out.status).toBe(405);
   });
 
   it('GET /api/members 는 첫 호출에 샘플 멤버를 시드한다', async () => {

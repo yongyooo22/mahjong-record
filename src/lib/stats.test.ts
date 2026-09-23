@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_RULES } from '../config/rules';
 import type { Game, Member } from './types';
 import {
-  availableMonths,
   computeGroupSummary,
   computeMemberStats,
   computeMonthlySummary,
@@ -47,9 +46,8 @@ describe('월 키', () => {
     expect(previousMonthKey('2025-01')).toBe('2024-12');
   });
 
-  it('월별 필터와 월 목록', () => {
+  it('월별 필터와 최신순 정렬', () => {
     expect(gamesInMonth([g1, g2, g3], '2025-03').map((g) => g.id)).toEqual(['g1', 'g2']);
-    expect(availableMonths([g3, g1, g2])).toEqual(['2025-03', '2025-02']);
     expect(sortGamesDesc([g3, g2, g1]).map((g) => g.id)).toEqual(['g1', 'g2', 'g3']);
   });
 });
@@ -100,7 +98,6 @@ describe('월 요약', () => {
     expect(s.avgRank).toEqual({ current: 2, previous: 4, delta: -2 });
     expect(s.avgPoints).toEqual({ current: 9.1, previous: -30, delta: 39.1 });
     expect(s.firstCount).toEqual({ current: 1, previous: 0, delta: 1 });
-    expect(s.lastCount).toEqual({ current: 0, previous: 1, delta: -1 });
     expect(s.totalPoints).toEqual({ current: 18.2, previous: -30, delta: 48.2 });
   });
 
@@ -116,18 +113,16 @@ describe('모임 요약', () => {
     const s = computeGroupSummary([g1, g2, g3], '2025-03');
     expect(s.games).toEqual({ current: 2, previous: 1, delta: 1 });
     // 모두 2국씩 참여 → 4명 전원 동률
-    expect(s.mostActive).toEqual({ memberIds: ['a', 'b', 'c', 'd'], value: 2, candidates: 4 });
+    expect(s.mostActive).toEqual({ memberIds: ['a', 'b', 'c', 'd'], value: 2 });
     // b: 7.6 + 30 = 37.6, 평균 18.8
-    expect(s.bestTotal).toEqual({ memberIds: ['b'], value: 37.6, candidates: 4 });
-    expect(s.bestAverage).toEqual({ memberIds: ['b'], value: 18.8, candidates: 4 });
+    expect(s.bestTotal).toEqual({ memberIds: ['b'], value: 37.6 });
+    expect(s.bestAverage).toEqual({ memberIds: ['b'], value: 18.8 });
     // 1위: g1 a, g2 b → 각 1회 동률
-    expect(s.topFirst).toEqual({ memberIds: ['a', 'b'], value: 1, candidates: 4 });
   });
 
   it('지난달 기록이 없으면 증감은 null, 대국이 없으면 최다는 null', () => {
     const s = computeGroupSummary([g3], '2025-02');
     expect(s.games).toEqual({ current: 1, previous: null, delta: null });
-    expect(computeGroupSummary([], '2025-02').topFirst).toBeNull();
     expect(computeGroupSummary([], '2025-02').mostActive).toBeNull();
   });
 });

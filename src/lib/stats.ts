@@ -26,12 +26,6 @@ export function gamesInMonth(games: Game[], key: string): Game[] {
   return games.filter((g) => monthKey(g.playedAt) === key);
 }
 
-/** 대국 목록에 등장하는 월 키를 최신순으로 */
-export function availableMonths(games: Game[]): string[] {
-  const set = new Set(games.map((g) => monthKey(g.playedAt)));
-  return [...set].sort((a, b) => (a < b ? 1 : -1));
-}
-
 /** 최신순 정렬 (대국 일시 → 생성 시각) */
 export function sortGamesDesc(games: Game[]): Game[] {
   return [...games].sort(
@@ -149,7 +143,6 @@ export interface MonthlySummary {
   /** 대국당 평균 우마 */
   avgPoints: StatDelta;
   firstCount: StatDelta;
-  lastCount: StatDelta;
   totalPoints: StatDelta;
 }
 
@@ -164,7 +157,6 @@ export function computeMonthlySummary(games: Game[], memberId: string, month: st
     avgRank: delta(cur.avgRank, prevPlayed ? prev.avgRank : null),
     avgPoints: delta(cur.avgPoints, prevPlayed ? prev.avgPoints : null),
     firstCount: delta(cur.rankCounts[0], prevPlayed ? prev.rankCounts[0] : null),
-    lastCount: delta(cur.rankCounts[3], prevPlayed ? prev.rankCounts[3] : null),
     totalPoints: delta(cur.totalPoints, prevPlayed ? prev.totalPoints : null),
   };
 }
@@ -172,10 +164,8 @@ export function computeMonthlySummary(games: Game[], memberId: string, month: st
 export interface TopMember {
   /** 지표가 가장 큰 멤버들 (동률이면 여러 명, 대국 참여 순서 무관) */
   memberIds: string[];
-  /** 지표 값 (참여 수·평균 우마·1위 횟수) */
+  /** 지표 값 (참여 수·누적 우마·평균 우마) */
   value: number;
-  /** 이번 달에 대국한 멤버 수 (전원 동률 표시용) */
-  candidates: number;
 }
 
 export interface GroupSummary {
@@ -188,18 +178,14 @@ export interface GroupSummary {
   bestTotal: TopMember | null;
   /** 대국당 평균 우마가 가장 높은 멤버 (value = 평균 우마) */
   bestAverage: TopMember | null;
-  /** 1위를 가장 많이 한 멤버 (value = 1위 횟수) */
-  topFirst: TopMember | null;
 }
 
 /** 지표가 가장 큰 멤버들. 동률이면 모두 포함합니다. */
 function topMembers(stats: Map<string, MemberStats>, metric: (s: MemberStats) => number | null): TopMember | null {
   let best: number | null = null;
   let ids: string[] = [];
-  let candidates = 0;
   for (const [memberId, s] of stats) {
     if (s.games === 0) continue;
-    candidates += 1;
     const value = metric(s);
     if (value === null) continue;
     if (best === null || value > best) {
@@ -209,7 +195,7 @@ function topMembers(stats: Map<string, MemberStats>, metric: (s: MemberStats) =>
       ids.push(memberId);
     }
   }
-  return best === null ? null : { memberIds: ids, value: best, candidates };
+  return best === null ? null : { memberIds: ids, value: best };
 }
 
 /** 모임 전체의 이번 달 요약 — 누가 보든 같은 값 (홈 화면용) */
@@ -223,7 +209,6 @@ export function computeGroupSummary(games: Game[], month: string): GroupSummary 
     mostActive: topMembers(stats, (s) => s.games),
     bestTotal: topMembers(stats, (s) => s.totalPoints),
     bestAverage: topMembers(stats, (s) => s.avgPoints),
-    topFirst: topMembers(stats, (s) => (s.rankCounts[0] > 0 ? s.rankCounts[0] : null)),
   };
 }
 

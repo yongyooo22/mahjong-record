@@ -5,10 +5,10 @@
 친구 모임용 리치마작 대국 기록 웹앱입니다. 모바일 브라우저에서 쓰는 것을 기본으로 하며, 친구들이 각자 폰으로 접속해 같은 기록을 보고 입력할 수 있습니다.
 
 - 대국 기록: 4인 반장전/동풍전, 장소 선택(기본 마작카페·이수마장 + 직접 추가), 최종 점수 입력 → 순위·우마 자동 계산 (작혼 방식), 역만이 나왔으면 누가 무슨 역만인지 기록
-- 홈 (모두 같은 화면): 이번 달 대국 수 / 최다 참여 / 평균 우마 1위 / 1위 최다, 이번 달 랭킹(MVP), 최근 대국
+- 홈 (모두 같은 화면): 이번 달 대국 수 / 최다 참여 / 누적 우마 1위 / 평균 우마 1위, 이번 달 랭킹(MVP), 최근 대국
 - 기록: 월별 필터, 상세 보기, 삭제
 - 랭킹: 월별 / 전체 기간, 누적 우마 기준
-- 내 기록: 각자 자기 폰에서 "나"를 고르면 참여 횟수 / 1위 횟수 / 라스 횟수 / 평균 우마 (지난달 대비), 순위 분포, 내가 참여한 대국과 역만
+- 내 기록: 각자 자기 폰에서 "나"를 고르면 참여 횟수 / 1위 횟수 / 누적 우마 / 평균 우마 (지난달 대비), 순위 분포, 내가 참여한 대국과 역만
 - 멤버: 추가·수정, 캐릭터(아바타) 이미지 선택, 대국 기록이 있는 멤버는 비활성 처리
 
 ## 기술 스택
@@ -23,7 +23,7 @@
 
 ```
 api/
-  health.ts               # Redis 설정 여부 확인 (클라이언트가 저장소를 고를 때 사용)
+  bootstrap.ts            # GET /api/bootstrap — 첫 로딩용 멤버+대국 한 번에 (함수 호출 1회)
   members/index.ts        # GET, POST /api/members
   members/[id].ts         # PUT /api/members/:id
   games/index.ts          # GET, POST /api/games
@@ -68,7 +68,7 @@ npm run build        # 타입 검사 + 프로덕션 빌드
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST 토큰 |
 
-두 값이 모두 있어야 서버가 Redis 를 사용합니다. 없으면 `/api/health` 가 `{ ok: false }` 를 돌려주고 클라이언트는 자동으로 localStorage 저장소로 전환합니다.
+두 값이 모두 있어야 서버가 Redis 를 사용합니다. 없으면 `/api/*` 가 503 을 돌려주고 클라이언트는 자동으로 localStorage 저장소로 전환합니다.
 (Vercel Marketplace 에서 Upstash 를 연동하면 `KV_REST_API_URL` / `KV_REST_API_TOKEN` 이름으로 주입되는 경우도 있는데, 이 이름도 인식합니다.)
 
 빌드 시 `VITE_STORAGE=local` 을 주면 API 와 상관없이 항상 localStorage 만 사용합니다 (데모용).

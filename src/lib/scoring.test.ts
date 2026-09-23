@@ -5,7 +5,6 @@ import {
   computeRanks,
   computeResults,
   formatPoints,
-  hasTie,
   round1,
   scoreTotalDiff,
   tieGroups,
@@ -73,8 +72,6 @@ describe('검증 도우미', () => {
   });
 
   it('동점 그룹을 찾는다', () => {
-    expect(hasTie([1, 2, 3, 4])).toBe(false);
-    expect(hasTie([1, 1, 3, 4])).toBe(true);
     expect(tieGroups([25000, 30000, 25000, 20000])).toEqual([[0, 2]]);
   });
 });

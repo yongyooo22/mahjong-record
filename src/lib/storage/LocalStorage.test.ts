@@ -9,11 +9,11 @@ describe('LocalStorageAdapter', () => {
 
   it('비어 있으면 샘플 멤버를 한 번만 시드한다', async () => {
     const a = new LocalStorageAdapter();
-    const first = await a.listMembers();
+    const first = (await a.load()).members;
     expect(first.map((m) => m.name)).toEqual(['연경', '영식', '소원', '찬영']);
     await a.addMember({ name: '새멤버' });
     const b = new LocalStorageAdapter();
-    expect((await b.listMembers()).length).toBe(5);
+    expect((await b.load()).members.length).toBe(5);
   });
 
   it('멤버 추가/수정', async () => {
@@ -42,9 +42,9 @@ describe('LocalStorageAdapter', () => {
     });
     expect(g.id).toMatch(/^g-/);
     const b = new LocalStorageAdapter();
-    expect((await b.listGames()).map((x) => x.id)).toEqual([g.id]);
+    expect((await b.load()).games.map((x) => x.id)).toEqual([g.id]);
     await b.deleteGame(g.id);
-    expect(await new LocalStorageAdapter().listGames()).toEqual([]);
+    expect((await new LocalStorageAdapter().load()).games).toEqual([]);
     await expect(b.deleteGame(g.id)).rejects.toThrow();
   });
 
@@ -53,7 +53,7 @@ describe('LocalStorageAdapter', () => {
       'mahjong.games',
       JSON.stringify([{ id: 'g-old', playedAt: '2025-03-08T19:30:00.000Z', title: '옛 제목', memo: '한마디', playerCount: 4, gameType: 'hanchan', playerIds: ['a', 'b', 'c', 'd'], scores: [25000, 25000, 25000, 25000], createdAt: '', rules: DEFAULT_RULES }]),
     );
-    const [g] = await new LocalStorageAdapter().listGames();
+    const [g] = (await new LocalStorageAdapter().load()).games;
     expect(g.place).toBe('옛 제목');
     expect(g.yakumans).toEqual([]);
     expect('title' in g).toBe(false);
@@ -68,7 +68,7 @@ describe('LocalStorageAdapter', () => {
         { ...base, id: 'g-h', gameType: 'hanchan', rules: { ...DEFAULT_RULES, tonpuuUmaMultiplier: 1 } },
       ]),
     );
-    const games = await new LocalStorageAdapter().listGames();
+    const games = (await new LocalStorageAdapter().load()).games;
     expect(games.find((g) => g.id === 'g-t')?.rules.tonpuuUmaMultiplier).toBe(0.5);
     expect(games.find((g) => g.id === 'g-h')?.rules.tonpuuUmaMultiplier).toBe(1);
   });
@@ -81,10 +81,10 @@ describe('LocalStorageAdapter', () => {
       { id: 'hyunwoo', name: '현우' },
     ].map((m) => ({ ...m, avatar: null, active: true, createdAt: '2025-01-01T00:00:00.000Z' }));
     window.localStorage.setItem('mahjong.members', JSON.stringify(legacy));
-    expect((await new LocalStorageAdapter().listMembers()).map((m) => m.id)).toEqual(['yeonkyung', 'youngsik', 'sowon', 'chanyoung']);
+    expect((await new LocalStorageAdapter().load()).members.map((m) => m.id)).toEqual(['yeonkyung', 'youngsik', 'sowon', 'chanyoung']);
 
     // 이름을 바꾼 흔적이 있으면 그대로 둔다
     window.localStorage.setItem('mahjong.members', JSON.stringify([{ ...legacy[0], name: '연경이' }, ...legacy.slice(1)]));
-    expect((await new LocalStorageAdapter().listMembers()).map((m) => m.id)).toEqual(['yeonkyung', 'minsu', 'jisu', 'hyunwoo']);
+    expect((await new LocalStorageAdapter().load()).members.map((m) => m.id)).toEqual(['yeonkyung', 'minsu', 'jisu', 'hyunwoo']);
   });
 });

@@ -12,12 +12,28 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- 홈 로고의 發 한 글자용 명조체. text= 로 글자 하나만 받아서 몇 KB 수준이며, 폰에서도 노트북과 같은 서체로 보입니다. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@900&text=%E7%99%BC&display=swap" />
+    <!--
+      웹폰트 CSS 는 preload 로 받아 두고 다 받은 뒤에 적용합니다 (첫 화면 그리기를 막지 않음).
+      폰트가 오기 전에는 시스템 글꼴로 먼저 보이고, 받아지면 바뀝니다.
+      - Pretendard: 본문 서체 (dynamic subset — 화면에 쓰인 글자 범위의 파일만 받음)
+      - Noto Serif KR: 홈 로고의 發 한 글자용 (text= 로 글자 하나만 받아서 몇 KB 수준)
+    -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@900&text=%E7%99%BC&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@900&text=%E7%99%BC&display=swap" />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>

@@ -84,11 +84,6 @@ export function scoreTotalDiff(scores: number[], rules: ScoringRules, playerCoun
   return { total, expected, diff: total - expected };
 }
 
-/** 동점이 있는지 */
-export function hasTie(scores: number[]): boolean {
-  return new Set(scores).size !== scores.length;
-}
-
 /** 동점 그룹 (인덱스 배열) — 길이 2 이상인 그룹만 */
 export function tieGroups(scores: number[]): number[][] {
   const map = new Map<number, number[]>();
