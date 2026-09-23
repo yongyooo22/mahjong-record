@@ -59,6 +59,20 @@ describe('LocalStorageAdapter', () => {
     expect('title' in g).toBe(false);
   });
 
+  it('예전 동풍전 기록(우마 배율 1)은 절반 우마로 다시 계산된다', async () => {
+    const base = { playedAt: '2025-03-08T19:30:00.000Z', place: '', yakumans: [], playerCount: 4, playerIds: ['a', 'b', 'c', 'd'], scores: [25000, 25000, 25000, 25000], createdAt: '' };
+    window.localStorage.setItem(
+      'mahjong.games',
+      JSON.stringify([
+        { ...base, id: 'g-t', gameType: 'tonpuu', rules: { ...DEFAULT_RULES, tonpuuUmaMultiplier: 1 } },
+        { ...base, id: 'g-h', gameType: 'hanchan', rules: { ...DEFAULT_RULES, tonpuuUmaMultiplier: 1 } },
+      ]),
+    );
+    const games = await new LocalStorageAdapter().listGames();
+    expect(games.find((g) => g.id === 'g-t')?.rules.tonpuuUmaMultiplier).toBe(0.5);
+    expect(games.find((g) => g.id === 'g-h')?.rules.tonpuuUmaMultiplier).toBe(1);
+  });
+
   it('손대지 않은 예전 초기 멤버는 새 초기 멤버로 교체한다', async () => {
     const legacy = [
       { id: 'yeonkyung', name: '연경' },
