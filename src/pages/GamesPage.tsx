@@ -1,7 +1,6 @@
 import { FileText, MapPin, PenLine, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
@@ -43,7 +42,6 @@ export function GameCard({ game }: { game: Game }) {
           return (
             <div key={r.index} className={s.playerRow}>
               <RankBadge rank={r.rank} size="sm" />
-              {member && <Avatar member={member} size={28} />}
               <span className={s.playerName}>{member?.name ?? '(삭제된 멤버)'}</span>
               <span className={s.playerScore}>{formatScore(r.score)}</span>
               <span className={s.playerUma}>우마 {formatPoints(r.uma)}</span>

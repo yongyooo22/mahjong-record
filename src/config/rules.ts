@@ -1,6 +1,6 @@
 /**
  * 정산 규칙 설정.
- * 기본값은 작혼(雀魂) 방식: 25,000점 시작 / 25,000점 반환(오카 없음), 우마 +15/+5/-5/-15.
+ * 기본값은 작혼(雀魂) 방식: 25,000점 시작 / 25,000점 반환(오카 없음), 우마 +15/+5/-5/-15 (동풍전은 절반).
  * 나중에 규칙을 바꾸려면 이 파일의 값만 수정하면 됩니다.
  */
 export type GameType = 'hanchan' | 'tonpuu';
@@ -20,7 +20,7 @@ export const DEFAULT_RULES: ScoringRules = {
   startPoints: 25000,
   returnPoints: 25000,
   uma: [15, 5, -5, -15],
-  tonpuuUmaMultiplier: 1,
+  tonpuuUmaMultiplier: 0.5,
 };
 
 export const GAME_TYPE_LABEL: Record<GameType, string> = {
