@@ -79,22 +79,26 @@
   font-size: 14px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
-  min-width: 56px;
+  flex: 0 0 66px;
   text-align: right;
+  white-space: nowrap;
 }
 
 .playerUma {
   font-size: 12px;
   color: var(--text-faint);
-  min-width: 34px;
+  flex: 0 0 70px;
   text-align: right;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
 .playerPoints {
   font-size: 15px;
-  min-width: 52px;
+  flex: 0 0 52px;
   text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .gameTitleIcon {
