@@ -253,6 +253,18 @@
   text-overflow: ellipsis;
 }
 
+.recentType {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ivory);
+  color: var(--green);
+  font-size: 10.5px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .recentYakuman {
   display: inline-flex;
   align-items: center;

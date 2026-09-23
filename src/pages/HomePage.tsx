@@ -13,6 +13,7 @@ import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
 import { headerBgStyle, LOGO_IMAGE } from '../config/images';
+import { GAME_TYPE_LABEL } from '../config/rules';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
 import { computeResults, formatPoints } from '../lib/scoring';
 import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc, type TopMember } from '../lib/stats';
@@ -219,6 +220,7 @@ export function HomePage() {
                   <div className={s.recentBody}>
                     <div className={s.recentTitle}>
                       {g.place || '장소 미정'}
+                      <span className={s.recentType}>{GAME_TYPE_LABEL[g.gameType]}</span>
                       {g.yakumans.length > 0 && (
                         <span className={s.recentYakuman}>
                           <Sparkles size={11} /> 역만
