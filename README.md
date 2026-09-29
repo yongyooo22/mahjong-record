@@ -17,13 +17,15 @@
 - CSS Modules (Tailwind 미사용), 아이콘 [lucide-react](https://lucide.dev/)
 - Vercel Serverless Functions (`/api/*`) + Upstash Redis (`@upstash/redis`)
 - 환경 변수가 없으면 자동으로 브라우저 `localStorage` 저장소로 동작
+- 앱을 다시 열면 이 기기에 저장해 둔 지난번 서버 데이터(`localStorage` 의 `mahjong.remoteSnapshot`)를 먼저 보여 주고, 서버의 최신 데이터를 받는 대로 바꿔 끼움
 - 단위 테스트: Vitest (`src/lib/scoring.ts`, `src/lib/stats.ts`, 저장소, API 핸들러)
 
 ## 폴더 구조
 
 ```
 api/
-  health.ts               # Redis 설정 여부 확인 (클라이언트가 저장소를 고를 때 사용)
+  bootstrap.ts            # GET /api/bootstrap — 앱을 열 때 멤버·대국을 한 번에 (클라이언트가 저장소를 고를 때도 사용)
+  health.ts               # Redis 설정 여부 확인 (배포 후 점검용)
   members/index.ts        # GET, POST /api/members
   members/[id].ts         # PUT /api/members/:id
   games/index.ts          # GET, POST /api/games
@@ -68,7 +70,7 @@ npm run build        # 타입 검사 + 프로덕션 빌드
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST 토큰 |
 
-두 값이 모두 있어야 서버가 Redis 를 사용합니다. 없으면 `/api/health` 가 `{ ok: false }` 를 돌려주고 클라이언트는 자동으로 localStorage 저장소로 전환합니다.
+두 값이 모두 있어야 서버가 Redis 를 사용합니다. 없으면 `/api/bootstrap` 이 503(`STORAGE_NOT_CONFIGURED`)을 돌려주고 클라이언트는 자동으로 localStorage 저장소로 전환합니다. (`/api/health` 를 브라우저로 열면 설정 여부를 `{ ok: true/false }` 로 확인할 수 있습니다.)
 (Vercel Marketplace 에서 Upstash 를 연동하면 `KV_REST_API_URL` / `KV_REST_API_TOKEN` 이름으로 주입되는 경우도 있는데, 이 이름도 인식합니다.)
 
 빌드 시 `VITE_STORAGE=local` 을 주면 API 와 상관없이 항상 localStorage 만 사용합니다 (데모용).
@@ -78,7 +80,7 @@ npm run build        # 타입 검사 + 프로덕션 빌드
 1. 이 저장소를 GitHub 에 푸시하고 [Vercel](https://vercel.com/new) 에서 **Import** 합니다. 프레임워크는 Vite 로 자동 감지되며 `vercel.json` 에 빌드·출력 설정과 SPA 리라이트가 들어 있습니다.
 2. Vercel 프로젝트의 **Storage** 탭 → **Create Database** → **Upstash Redis** 를 선택해 연결합니다. 연결하면 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` 환경 변수가 프로젝트에 자동으로 추가됩니다.
    - Upstash 콘솔에서 직접 만든 경우에는 데이터베이스의 **REST API** 값을 Vercel 프로젝트 **Settings → Environment Variables** 에 같은 이름으로 넣어 주세요.
-3. 환경 변수를 추가한 뒤 **Redeploy** 합니다. 홈 화면 맨 아래에 "공유 저장소(Redis)에 연결됨" 이 표시되면 성공입니다.
+3. 환경 변수를 추가한 뒤 **Redeploy** 합니다. 배포 주소 뒤에 `/api/health` 를 붙여 열었을 때 `{"ok":true,"storage":"redis"}` 가 보이면 성공입니다.
 
 초기 멤버는 `api/_lib/seedMembers.ts` 에서 바꿉니다. 예전 초기 멤버(연경·민수·지수·현우)가 손대지 않은 채 남아 있고 대국 기록이 없으면 첫 접속 때 자동으로 새 초기 멤버로 교체됩니다.
 
@@ -98,15 +100,17 @@ Redis 에는 다음 두 키만 사용합니다.
 | 홈 왼쪽 위 로고 | `public/images/logo.png` (정사각형, 투명 배경) — 없으면 發 패 모양 기본 로고 |
 | 홈 상단 배경 | `public/images/bg/home.webp` (가로 2:1) |
 | 기록 화면 상단 배경 | `public/images/bg/record.webp` (가로 2:1) |
-| 홈 마스코트 | `public/images/mascot/home.png` (투명 배경) |
-| 기록 화면 마스코트 | `public/images/mascot/record.png` (투명 배경) |
-| 멤버 아바타 후보 | `public/images/avatars/*.png` (파일명 자유) |
+| 홈 마스코트 | `public/images/mascot/home.webp` (투명 배경) |
+| 기록 화면 마스코트 | `public/images/mascot/record.webp` (투명 배경) |
+| 멤버 아바타 후보 | `public/images/avatars/*.webp` 또는 `*.png` (파일명 자유) |
 
-- `public/images/avatars/` 에 넣은 PNG 는 빌드 시 자동으로 수집되어 멤버 추가·수정 화면의 **캐릭터** 선택 격자에 나타납니다. 파일을 추가하고 다시 배포하면 바로 고를 수 있습니다.
-- 멤버가 아직 캐릭터를 고르지 않았으면 `<멤버ID>.png` 파일이 있을 때 그 파일을 씁니다. 초기 멤버의 ID 는 `yeonkyung`(연경), `youngsik`(영식), `sowon`(소원), `chanyoung`(찬영) 입니다.
+- `public/images/avatars/` 에 넣은 WebP·PNG 는 빌드 시 자동으로 수집되어 멤버 추가·수정 화면의 **캐릭터** 선택 격자에 나타납니다. 파일을 추가하고 다시 배포하면 바로 고를 수 있습니다. 같은 이름의 `.webp` 와 `.png` 가 함께 있으면 `.webp` 를 씁니다.
+- 멤버가 아직 캐릭터를 고르지 않았으면 `<멤버ID>.webp`(또는 `.png`) 파일이 있을 때 그 파일을 씁니다. 초기 멤버의 ID 는 `yeonkyung`(연경), `youngsik`(영식), `sowon`(소원), `chanyoung`(찬영) 입니다.
+- 예전에 `xxx.png` 로 골라 둔 캐릭터는 같은 이름의 `xxx.webp` 가 있으면 자동으로 그 파일을 씁니다.
 - 이미지가 없거나 로드에 실패하면 아바타 영역은 숨겨지고 이름만 표시되며, 마스코트가 없으면 여백만 남습니다.
-- 마스코트는 투명 배경 PNG 를 권장하고, 아바타는 정사각형(예: 512×512)을 권장합니다.
-- 용량: 배경은 1600px WebP, 마스코트는 700px, 아바타는 512px 팔레트 PNG 로 줄여 두었습니다 (한 장에 30~250KB). 새 그림을 올릴 때도 비슷하게 줄이면 폰에서 빠르게 뜹니다.
+- 마스코트는 투명 배경을, 아바타는 정사각형을 권장합니다.
+- 용량: 화면에 보이는 크기에 맞춰 배경은 1280px WebP(30~40KB), 마스코트는 360px WebP(25~30KB), 아바타는 192px WebP(한 장에 6KB 안팎)로 줄여 두었습니다. 새 그림을 올릴 때도 비슷하게 줄이면 폰에서 빠르게 뜹니다.
+- `/images/*` 는 브라우저에 하루 동안 캐시됩니다 (`vercel.json`). 같은 파일명으로 그림을 바꾸면 폰에 따라 하루 정도 예전 그림이 보일 수 있으니, 바꿀 때는 새 파일명을 쓰는 편이 확실합니다.
 
 ## 정산 규칙 바꾸기
 

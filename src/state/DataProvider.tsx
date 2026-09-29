@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { createStorage, type StorageAdapter } from '../lib/storage';
+import { openStorage, RemoteStorageAdapter, type StorageAdapter } from '../lib/storage';
+import { readSnapshot, writeSnapshot } from '../lib/storage/snapshot';
 import type { Game, Member, MemberPatch, NewGame, NewMember } from '../lib/types';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -10,6 +11,8 @@ interface DataContextValue {
   storageKind: 'remote' | 'local' | null;
   members: Member[];
   games: Game[];
+  /** 이 기기에 저장해 둔 데이터를 보여 주면서 서버의 최신 데이터를 받는 중 */
+  syncing: boolean;
   retry: () => void;
   addGame: (input: NewGame) => Promise<Game>;
   deleteGame: (id: string) => Promise<void>;
@@ -35,32 +38,53 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [storageKind, setStorageKind] = useState<'remote' | 'local' | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [games, setGames] = useState<Game[]>([]);
+  const [syncing, setSyncing] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setStatus('loading');
     setError(null);
+    // 지난번에 서버에서 받은 데이터가 있으면 바로 보여 주고, 최신 데이터는 뒤에서 받아 바꿔 끼웁니다.
+    const snapshot = attempt === 0 ? readSnapshot() : null;
+    if (snapshot) {
+      storageRef.current = new RemoteStorageAdapter();
+      setStorageKind('remote');
+      setMembers(snapshot.members);
+      setGames(snapshot.games);
+      setStatus('ready');
+      setSyncing(true);
+    } else {
+      setStatus('loading');
+    }
     (async () => {
       try {
-        const storage = storageRef.current ?? (await createStorage());
-        storageRef.current = storage;
-        const [m, g] = await Promise.all([storage.listMembers(), storage.listGames()]);
+        const { storage, members: m, games: g } = await openStorage();
         if (cancelled) return;
+        storageRef.current = storage;
         setStorageKind(storage.kind);
         setMembers(m);
         setGames(g);
         setStatus('ready');
       } catch (err) {
         if (cancelled) return;
+        // 저장해 둔 데이터를 보여 주는 중이면 그대로 둡니다 (저장·삭제는 서버 요청이라 실패하면 그때 알려 줌).
+        if (snapshot) return;
         setError(errorMessage(err));
         setStatus('error');
+      } finally {
+        if (!cancelled) setSyncing(false);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [attempt]);
+
+  // 서버 데이터가 바뀔 때마다 다음 접속용으로 저장합니다. localStorage 저장소면 원본이 이미 이 기기에 있으므로 지웁니다.
+  useEffect(() => {
+    if (status !== 'ready' || syncing) return;
+    writeSnapshot(storageKind === 'remote' ? { members, games } : null);
+  }, [status, syncing, storageKind, members, games]);
 
   const retry = useCallback(() => {
     storageRef.current = null;
@@ -97,8 +121,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<DataContextValue>(
-    () => ({ status, error, storageKind, members, games, retry, addGame, deleteGame, addMember, updateMember }),
-    [status, error, storageKind, members, games, retry, addGame, deleteGame, addMember, updateMember],
+    () => ({ status, error, storageKind, members, games, syncing, retry, addGame, deleteGame, addMember, updateMember }),
+    [status, error, storageKind, members, games, syncing, retry, addGame, deleteGame, addMember, updateMember],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
