@@ -7,6 +7,7 @@ import {
   computeMemberStats,
   computeMonthlySummary,
   computeRanking,
+  defaultPlayerIds,
   gamesForMember,
   gamesInMonth,
   monthKey,
@@ -139,5 +140,23 @@ describe('멤버별 대국', () => {
     expect(rows[0]).toMatchObject({ rank: 1, score: 38200, points: 28.2 });
     expect(rows[2]).toMatchObject({ rank: 4, score: 10000 });
     expect(gamesForMember([g1], 'e')).toEqual([]);
+  });
+});
+
+describe('기본 참가자', () => {
+  const ids = members.map((m) => m.id);
+
+  it('가장 최근 대국의 참가자를 그 순서대로 고른다', () => {
+    expect(defaultPlayerIds([g3, g1, g2], ids, 4)).toEqual(['a', 'b', 'c', 'd']);
+    expect(defaultPlayerIds([g2, g3], ids, 4)).toEqual(['b', 'c', 'a', 'd']);
+  });
+
+  it('비활성이 된 멤버 자리는 다른 활성 멤버로 채운다', () => {
+    expect(defaultPlayerIds([g1], ['a', 'b', 'c', 'e'], 4)).toEqual(['a', 'b', 'c', 'e']);
+  });
+
+  it('대국이 없으면 활성 멤버를 앞에서부터, 모자라면 빈 칸', () => {
+    expect(defaultPlayerIds([], ids, 4)).toEqual(['a', 'b', 'c', 'd']);
+    expect(defaultPlayerIds([], ['a', 'b'], 4)).toEqual(['a', 'b', '', '']);
   });
 });

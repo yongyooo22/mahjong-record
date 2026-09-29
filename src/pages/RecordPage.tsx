@@ -16,7 +16,7 @@ import { DEFAULT_RULES, GAME_TYPE_LABEL, type GameType } from '../config/rules';
 import { YAKUMAN_MAX_PER_GAME, YAKUMAN_NAME_MAX_LENGTH, YAKUMAN_NAMES, YAKUMAN_OTHER } from '../config/yakuman';
 import { fromDateTimeInputs, toDateInput, toTimeInput } from '../lib/format';
 import { computeResults, formatScore, scoreTotalDiff, tieGroups } from '../lib/scoring';
-import { sortGamesDesc } from '../lib/stats';
+import { defaultPlayerIds, sortGamesDesc } from '../lib/stats';
 import type { NewGame, Yakuman } from '../lib/types';
 import { useData, useMemberMap } from '../state/DataProvider';
 import ui from '../components/ui.module.css';
@@ -74,14 +74,15 @@ export function RecordPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // 멤버가 4명 이상이면 처음 4명을 기본 선택
+  // 참가자 기본값: 가장 최근 대국의 멤버, 없으면 활성 멤버 앞에서부터
   useEffect(() => {
     if (status !== 'ready') return;
     setSlots((prev) => {
       if (prev.some((p) => p.memberId)) return prev;
-      return prev.map((p, i) => ({ ...p, memberId: activeMembers[i]?.id ?? '' }));
+      const ids = defaultPlayerIds(games, activeMembers.map((m) => m.id), PLAYER_COUNT);
+      return prev.map((p, i) => ({ ...p, memberId: ids[i] }));
     });
-  }, [status, activeMembers]);
+  }, [status, games, activeMembers]);
 
   // 장소 기본값: 가장 최근 대국의 장소, 없으면 기본 목록의 첫 번째
   useEffect(() => {
