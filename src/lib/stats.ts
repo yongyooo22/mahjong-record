@@ -259,3 +259,37 @@ export function defaultPlayerIds(games: Game[], activeMemberIds: string[], count
   const rest = activeMemberIds.filter((id) => !picked.includes(id));
   return Array.from({ length: count }, (_, i) => picked[i] ?? rest[i - picked.length] ?? '');
 }
+
+/** 명예의 전당: 한 달에 나온 역만 한 건 */
+export interface FameYakuman {
+  gameId: string;
+  playedAt: string;
+  memberId: string;
+  name: string;
+}
+
+/** 명예의 전당: 한 달 기록 */
+export interface FameMonth {
+  month: string;
+  /** 그 달 대국 수 */
+  games: number;
+  /** 그 달 랭킹 1위 (랭킹 탭과 같은 기준 — 누적 우마) */
+  champion: RankingRow | null;
+  /** 그 달 나온 역만 (최신순) */
+  yakumans: FameYakuman[];
+}
+
+/** 대국이 있었던 달마다 1위와 역만 기록을 최신 달부터 */
+export function computeHallOfFame(games: Game[], members: Member[]): FameMonth[] {
+  return availableMonths(games).map((month) => {
+    const monthGames = gamesInMonth(games, month);
+    return {
+      month,
+      games: monthGames.length,
+      champion: computeRanking(monthGames, members)[0] ?? null,
+      yakumans: sortGamesDesc(monthGames).flatMap((g) =>
+        g.yakumans.map((y) => ({ gameId: g.id, playedAt: g.playedAt, memberId: y.playerId, name: y.name })),
+      ),
+    };
+  });
+}
