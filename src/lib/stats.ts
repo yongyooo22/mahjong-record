@@ -246,3 +246,16 @@ export function gamesForMember(games: Game[], memberId: string): MemberGameRow[]
   }
   return rows;
 }
+
+/**
+ * 대국 기록 화면의 기본 참가자.
+ * 가장 최근 대국의 참가자를 그 순서대로 쓰고, 비활성이 된 멤버 자리는 다른 활성 멤버로 채웁니다.
+ * 대국이 없으면 활성 멤버를 앞에서부터 고릅니다. 채울 사람이 모자라면 빈 문자열로 남깁니다.
+ */
+export function defaultPlayerIds(games: Game[], activeMemberIds: string[], count: number): string[] {
+  const active = new Set(activeMemberIds);
+  const recent = sortGamesDesc(games)[0]?.playerIds ?? [];
+  const picked = recent.filter((id) => active.has(id)).slice(0, count);
+  const rest = activeMemberIds.filter((id) => !picked.includes(id));
+  return Array.from({ length: count }, (_, i) => picked[i] ?? rest[i - picked.length] ?? '');
+}
