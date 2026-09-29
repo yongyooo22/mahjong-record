@@ -129,13 +129,32 @@ export const memberByIdHandler = (resolveStore?: () => Store | null) =>
     res.status(200).json(updated);
   }, resolveStore);
 
+/** 저장된 대국 전체 (현재 스키마로 맞춘 뒤 최신순) */
+async function listGames(store: Store): Promise<Game[]> {
+  const games = (await store.getGames()).map(normalizeGame);
+  games.sort((a, b) => (a.playedAt < b.playedAt ? 1 : a.playedAt > b.playedAt ? -1 : 0));
+  return games;
+}
+
+/**
+ * GET /api/bootstrap — 앱을 열 때 멤버와 대국을 한 번에 돌려줍니다.
+ * 요청이 하나라 서버리스 함수 콜드 스타트도 한 번만 겪고, Redis 조회는 동시에 합니다.
+ */
+export const bootstrapHandler = (resolveStore?: () => Store | null) =>
+  withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
+    if (req.method !== 'GET') {
+      methodNotAllowed(res, ['GET']);
+      return;
+    }
+    const [members, games] = await Promise.all([loadMembers(store), listGames(store)]);
+    res.status(200).json({ members, games });
+  }, resolveStore);
+
 /** GET /api/games, POST /api/games */
 export const gamesHandler = (resolveStore?: () => Store | null) =>
   withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
     if (req.method === 'GET') {
-      const games = (await store.getGames()).map(normalizeGame);
-      games.sort((a, b) => (a.playedAt < b.playedAt ? 1 : a.playedAt > b.playedAt ? -1 : 0));
-      res.status(200).json(games);
+      res.status(200).json(await listGames(store));
       return;
     }
     if (req.method === 'POST') {

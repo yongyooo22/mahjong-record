@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RULES } from '../../src/config/rules';
-import { gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler } from './handlers';
+import { bootstrapHandler, gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler } from './handlers';
 import { MemoryStore } from './store';
 
 function mockReq(method: string, opts: { body?: unknown; query?: Record<string, string> } = {}) {
@@ -46,6 +46,30 @@ describe('API 핸들러', () => {
     const { res, out } = mockRes();
     await membersHandler(() => null)(mockReq('GET'), res);
     expect(out.status).toBe(503);
+  });
+
+  it('GET /api/bootstrap 은 멤버와 대국을 한 번에 돌려준다', async () => {
+    let r = mockRes();
+    await bootstrapHandler(() => null)(mockReq('GET'), r.res);
+    expect(r.out.status).toBe(503);
+    expect((r.out.body as { code: string }).code).toBe('STORAGE_NOT_CONFIGURED');
+
+    const store = new MemoryStore();
+    r = mockRes();
+    await gamesHandler(() => store)(mockReq('POST', { body: validGame }), r.res);
+    await gamesHandler(() => store)(mockReq('POST', { body: { ...validGame, playedAt: '2025-03-09T10:30:00.000Z' } }), r.res);
+
+    r = mockRes();
+    await bootstrapHandler(() => store)(mockReq('GET'), r.res);
+    expect(r.out.status).toBe(200);
+    expect(r.out.headers['Cache-Control']).toBe('no-store');
+    const body = r.out.body as { members: { id: string }[]; games: { playedAt: string }[] };
+    expect(body.members.map((m) => m.id)).toEqual(['yeonkyung', 'youngsik', 'sowon', 'chanyoung']);
+    expect(body.games.map((g) => g.playedAt)).toEqual(['2025-03-09T10:30:00.000Z', '2025-03-08T10:30:00.000Z']);
+
+    r = mockRes();
+    await bootstrapHandler(() => store)(mockReq('POST'), r.res);
+    expect(r.out.status).toBe(405);
   });
 
   it('GET /api/members 는 첫 호출에 샘플 멤버를 시드한다', async () => {

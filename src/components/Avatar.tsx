@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { avatarUrl } from '../config/images';
 import type { Member } from '../lib/types';
 import s from './ui.module.css';
@@ -20,11 +20,13 @@ interface Props {
  */
 export function Avatar({ member, size = 40, className, onLoadState }: Props) {
   const url = avatarUrl(member);
-  const [error, setError] = useState(() => failed.has(url));
+  // 표시 여부는 URL 에서 매번 계산합니다 (같은 자리에서 멤버만 바뀌어도 맞게 보이도록).
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const visible = url !== null && !failed.has(url);
   useEffect(() => {
-    onLoadState?.(!error);
-  }, [error, onLoadState]);
-  if (error) return null;
+    onLoadState?.(visible);
+  }, [visible, onLoadState]);
+  if (!visible) return null;
   return (
     <img
       src={url}
@@ -37,7 +39,7 @@ export function Avatar({ member, size = 40, className, onLoadState }: Props) {
       decoding="async"
       onError={() => {
         failed.add(url);
-        setError(true);
+        rerender();
       }}
     />
   );

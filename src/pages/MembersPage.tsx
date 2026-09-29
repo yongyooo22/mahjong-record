@@ -47,8 +47,8 @@ function AvatarPicker({ value, onChange, members, editingId }: { value: string; 
     return map;
   }, [members, editingId]);
 
-  // 기존 멤버가 <id>.png 를 기본으로 쓰고 있으면 "없음" 을 골라도 그 이미지가 유지되므로 없음 옵션을 숨깁니다.
-  const showNone = !editingId || !optionFiles.has(`${editingId}.png`);
+  // 기존 멤버가 <id>.webp(.png) 를 기본으로 쓰고 있으면 "없음" 을 골라도 그 이미지가 유지되므로 없음 옵션을 숨깁니다.
+  const showNone = !editingId || !optionFiles.has(avatarFile({ id: editingId }));
 
   if (AVATAR_OPTIONS.length === 0) {
     return <span className={ui.help}>사용할 수 있는 아바타 이미지가 아직 없어요.</span>;

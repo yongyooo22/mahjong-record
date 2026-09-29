@@ -34,6 +34,28 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export class RemoteStorageAdapter implements StorageAdapter {
   readonly kind = 'remote' as const;
 
+  /**
+   * 앱을 열 때 멤버·대국을 한 번의 요청으로 받습니다.
+   * 서버에 Redis 가 설정되지 않았거나 /api 자체가 없으면(정적 호스팅, vite 단독 실행) null 을 돌려줍니다.
+   */
+  async bootstrap(): Promise<{ members: Member[]; games: Game[] } | null> {
+    let res: Response;
+    try {
+      res = await fetch('/api/bootstrap', { headers: { Accept: 'application/json' } });
+    } catch {
+      throw new StorageError('서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.');
+    }
+    if (res.status === 404) return null;
+    const body = (await res.json().catch(() => null)) as { members?: unknown; games?: unknown; code?: unknown; error?: unknown } | null;
+    if (res.status === 503 && body?.code === 'STORAGE_NOT_CONFIGURED') return null;
+    if (!res.ok) {
+      throw new StorageError(typeof body?.error === 'string' ? body.error : `요청에 실패했습니다. (${res.status})`, res.status);
+    }
+    // JSON 이 아니면(index.html 등) API 가 없는 환경
+    if (!body || !Array.isArray(body.members) || !Array.isArray(body.games)) return null;
+    return { members: body.members as Member[], games: body.games as Game[] };
+  }
+
   listMembers(): Promise<Member[]> {
     return request<Member[]>('/api/members');
   }
@@ -59,17 +81,5 @@ export class RemoteStorageAdapter implements StorageAdapter {
 
   async deleteGame(id: string): Promise<void> {
     await request<unknown>(`/api/games/${encodeURIComponent(id)}`, { method: 'DELETE' });
-  }
-}
-
-/** 서버 API 가 Redis 와 연결되어 있는지 확인 */
-export async function probeRemote(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/health', { headers: { Accept: 'application/json' } });
-    if (!res.ok) return false;
-    const body = (await res.json()) as { ok?: boolean; storage?: string };
-    return body.ok === true && body.storage === 'redis';
-  } catch {
-    return false;
   }
 }

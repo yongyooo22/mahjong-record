@@ -5,9 +5,9 @@
  *   public/images/logo.png            → 홈 왼쪽 위 로고 (정사각형, 투명 배경 권장). 없으면 發 패 그림을 그립니다
  *   public/images/bg/home.webp        → 홈 화면 상단 배경 (가로 2:1)
  *   public/images/bg/record.webp      → 대국 기록 화면 상단 배경 (가로 2:1)
- *   public/images/mascot/home.png     → 홈 화면 마스코트 (투명 배경 PNG)
- *   public/images/mascot/record.png   → 대국 기록 화면 마스코트 (투명 배경 PNG)
- *   public/images/avatars/*.png       → 멤버 아바타 후보 (멤버 화면에서 골라서 지정)
+ *   public/images/mascot/home.webp    → 홈 화면 마스코트 (투명 배경)
+ *   public/images/mascot/record.webp  → 대국 기록 화면 마스코트 (투명 배경)
+ *   public/images/avatars/*.webp|png  → 멤버 아바타 후보 (멤버 화면에서 골라서 지정)
  */
 import avatarFiles from 'virtual:avatar-files';
 
@@ -17,8 +17,8 @@ export const IMAGE_BASE = '/images';
 export const LOGO_IMAGE = `${IMAGE_BASE}/logo.png`;
 
 export const MASCOT_IMAGES = {
-  home: `${IMAGE_BASE}/mascot/home.png`,
-  record: `${IMAGE_BASE}/mascot/record.png`,
+  home: `${IMAGE_BASE}/mascot/home.webp`,
+  record: `${IMAGE_BASE}/mascot/record.webp`,
 } as const;
 
 export type MascotKey = keyof typeof MASCOT_IMAGES;
@@ -36,14 +36,27 @@ export function headerBgStyle(key: keyof typeof BG_IMAGES): React.CSSProperties 
 
 export const AVATAR_DIR = `${IMAGE_BASE}/avatars`;
 
-/** 멤버가 실제로 사용하는 아바타 파일명. avatar 필드가 비어 있으면 `<memberId>.png` */
-export function avatarFile(member: { id: string; avatar?: string | null }): string {
-  return member.avatar && member.avatar.trim() ? member.avatar.trim() : `${member.id}.png`;
+const AVATAR_FILE_SET = new Set<string>(avatarFiles);
+
+/**
+ * 저장된 파일명을 실제 파일로 맞춥니다.
+ * 아바타를 PNG → WebP 로 줄인 뒤에도 예전에 저장된 `xxx.png` 가 같은 이름의 `xxx.webp` 를 가리키도록 합니다.
+ */
+function resolveAvatarFile(file: string): string {
+  if (AVATAR_FILE_SET.has(file)) return file;
+  const webp = file.replace(/\.png$/i, '.webp');
+  return AVATAR_FILE_SET.has(webp) ? webp : file;
 }
 
-/** 멤버 아바타 URL */
-export function avatarUrl(member: { id: string; avatar?: string | null }): string {
-  return `${AVATAR_DIR}/${avatarFile(member)}`;
+/** 멤버가 실제로 사용하는 아바타 파일명. avatar 필드가 비어 있으면 `<memberId>.png` (또는 같은 이름의 .webp) */
+export function avatarFile(member: { id: string; avatar?: string | null }): string {
+  return resolveAvatarFile(member.avatar && member.avatar.trim() ? member.avatar.trim() : `${member.id}.png`);
+}
+
+/** 멤버 아바타 URL. public/images/avatars/ 에 그 파일이 없으면 null (없는 파일은 요청하지 않음) */
+export function avatarUrl(member: { id: string; avatar?: string | null }): string | null {
+  const file = avatarFile(member);
+  return AVATAR_FILE_SET.has(file) ? `${AVATAR_DIR}/${file}` : null;
 }
 
 export interface AvatarOption {
@@ -52,5 +65,5 @@ export interface AvatarOption {
   url: string;
 }
 
-/** 멤버 화면에서 고를 수 있는 아바타 목록 (public/images/avatars/ 의 PNG, 빌드 시 자동 수집 — vite.avatarFiles.ts) */
+/** 멤버 화면에서 고를 수 있는 아바타 목록 (public/images/avatars/ 의 WebP·PNG, 빌드 시 자동 수집 — vite.avatarFiles.ts) */
 export const AVATAR_OPTIONS: AvatarOption[] = avatarFiles.map((file) => ({ file, url: `${AVATAR_DIR}/${file}` }));

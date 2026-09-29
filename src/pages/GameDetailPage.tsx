@@ -22,7 +22,7 @@ export function GameDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const { status, games, deleteGame } = useData();
+  const { status, syncing, games, deleteGame } = useData();
   const memberMap = useMemberMap();
   const game = games.find((g) => g.id === id);
   const [confirm, setConfirm] = useState(false);
@@ -60,8 +60,8 @@ export function GameDetailPage() {
         )}
       </PageHeader>
       <div className={app.page}>
-        {status === 'loading' && <SkeletonRows rows={2} height={160} />}
-        {status === 'ready' && !game && (
+        {(status === 'loading' || (syncing && !game)) && <SkeletonRows rows={2} height={160} />}
+        {status === 'ready' && !syncing && !game && (
           <Card>
             <EmptyState icon={<Trash2 size={22} />} title="기록을 찾을 수 없어요" description="이미 삭제되었거나 주소가 잘못되었어요." />
           </Card>

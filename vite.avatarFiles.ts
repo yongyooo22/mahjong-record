@@ -5,7 +5,7 @@ const VIRTUAL_ID = 'virtual:avatar-files';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
 
 /**
- * `virtual:avatar-files` 모듈: public/images/avatars/ 안의 PNG 파일명 배열.
+ * `virtual:avatar-files` 모듈: public/images/avatars/ 안의 WebP·PNG 파일명 배열.
  * 이미지를 저장소에 추가하기만 하면 멤버 화면의 캐릭터 선택 목록에 자동으로 나타납니다.
  * (public/ 의 파일을 import 하면 Vite 가 assets/ 로 한 번 더 복사하므로, 파일명만 읽어 URL 은 /images/avatars/ 로 씁니다.)
  */
@@ -20,8 +20,10 @@ export function avatarFilesPlugin(dir = resolve(process.cwd(), 'public/images/av
       if (id !== RESOLVED_ID) return null;
       let files: string[] = [];
       try {
-        files = readdirSync(dir)
-          .filter((f) => /\.png$/i.test(f))
+        const all = readdirSync(dir).filter((f) => /\.(webp|png)$/i.test(f));
+        // 같은 이름의 .webp 가 있으면 .png 는 목록에서 뺍니다 (용량이 작은 WebP 를 씀)
+        files = all
+          .filter((f) => !/\.png$/i.test(f) || !all.includes(f.replace(/\.png$/i, '.webp')))
           .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
       } catch {
         files = [];
