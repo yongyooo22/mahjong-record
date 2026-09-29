@@ -296,6 +296,109 @@
   text-align: right;
 }
 
+/* ---- 명예의 전당 ---- */
+.fameCard {
+  padding: 14px;
+}
+
+.fameHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.fameMonth {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.fameOngoing {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--up-soft);
+  color: var(--up);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fameGames {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fameChampion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--rank-gold-bg);
+}
+
+.fameCrown {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rank-gold);
+  color: var(--white);
+  flex: 0 0 auto;
+}
+
+.fameLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a6a1c;
+}
+
+.fameYakumans {
+  margin-top: 8px;
+}
+
+.fameYakuman {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 2px;
+  border-top: 1px dashed var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.fameYakuman:first-child {
+  border-top: 0;
+}
+
+.fameYakumanIcon {
+  color: var(--gold);
+  flex: 0 0 auto;
+}
+
+.fameYakumanName {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.fameYakumanDate {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fameYakumanArrow {
+  color: var(--text-faint);
+  flex: 0 0 auto;
+}
+
 /* ---- 멤버 ---- */
 .memberRow {
   display: flex;

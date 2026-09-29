@@ -4,6 +4,7 @@ import type { Game, Member } from './types';
 import {
   availableMonths,
   computeGroupSummary,
+  computeHallOfFame,
   computeMemberStats,
   computeMonthlySummary,
   computeRanking,
@@ -158,5 +159,28 @@ describe('기본 참가자', () => {
   it('대국이 없으면 활성 멤버를 앞에서부터, 모자라면 빈 칸', () => {
     expect(defaultPlayerIds([], ids, 4)).toEqual(['a', 'b', 'c', 'd']);
     expect(defaultPlayerIds([], ['a', 'b'], 4)).toEqual(['a', 'b', '', '']);
+  });
+});
+
+describe('명예의 전당', () => {
+  it('대국이 있었던 달마다 1위와 역만을 최신 달부터', () => {
+    const g4 = game('g4', '2025-02-25T20:00:00', ['a', 'b', 'c', 'd'], [25000, 25000, 25000, 25000], [
+      { playerId: 'c', name: '대삼원' },
+      { playerId: 'd', name: '사암각' },
+    ]);
+    const fame = computeHallOfFame([g1, g2, g3, g4], members);
+    expect(fame.map((m) => m.month)).toEqual(['2025-03', '2025-02']);
+
+    const [mar, feb] = fame;
+    expect(mar.games).toBe(2);
+    expect(mar.champion?.member.id).toBe(computeRanking([g1, g2], members)[0].member.id);
+    expect(mar.yakumans).toEqual([{ gameId: 'g1', playedAt: g1.playedAt, memberId: 'a', name: '국사무쌍' }]);
+
+    expect(feb.champion?.member.id).toBe('e');
+    expect(feb.yakumans.map((y) => `${y.gameId}:${y.memberId}:${y.name}`)).toEqual(['g4:c:대삼원', 'g4:d:사암각']);
+  });
+
+  it('대국이 없으면 빈 목록', () => {
+    expect(computeHallOfFame([], members)).toEqual([]);
   });
 });
