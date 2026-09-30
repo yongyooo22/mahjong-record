@@ -82,6 +82,8 @@ npm run build        # 타입 검사 + 프로덕션 빌드
    - Upstash 콘솔에서 직접 만든 경우에는 데이터베이스의 **REST API** 값을 Vercel 프로젝트 **Settings → Environment Variables** 에 같은 이름으로 넣어 주세요.
 3. 환경 변수를 추가한 뒤 **Redeploy** 합니다. 배포 주소 뒤에 `/api/health` 를 붙여 열었을 때 `{"ok":true,"storage":"redis"}` 가 보이면 성공입니다.
 
+> **저장소 공개 여부 주의** — Vercel 무료(Hobby) 플랜에서 GitHub 저장소를 **비공개**로 두면, Vercel 계정 주인이 아닌 사람이 작성한 커밋(다른 GitHub 계정으로 머지한 PR 등)은 배포되지 않고 Deployments 에 **Blocked** 로 표시됩니다. 이 저장소는 공개로 두는 것을 전제로 합니다. 비공개로 써야 한다면 Vercel **Settings → Git → Deploy Hooks** 로 배포 주소를 만들어 머지 후 호출하거나, Pro 플랜에서 작성자를 팀원으로 추가해야 합니다. (저장소를 비공개로 해도 앱 데이터는 Redis 에 있고 사이트는 주소만 알면 열리므로, 가려지는 것은 코드뿐입니다.)
+
 초기 멤버는 `api/_lib/seedMembers.ts` 에서 바꿉니다. 예전 초기 멤버(연경·민수·지수·현우)가 손대지 않은 채 남아 있고 대국 기록이 없으면 첫 접속 때 자동으로 새 초기 멤버로 교체됩니다.
 
 Redis 에는 다음 두 키만 사용합니다.
