@@ -1,5 +1,6 @@
 import { Crown, Trophy } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
@@ -17,9 +18,15 @@ import app from '../styles/App.module.css';
 import { HallOfFame } from './HallOfFame';
 import s from './Pages.module.css';
 
+type Mode = 'month' | 'all' | 'fame';
+
 export function RankingPage() {
   const { status, error, retry, games, members } = useData();
-  const [mode, setMode] = useState<'month' | 'all' | 'fame'>('month');
+  // 고른 탭을 주소(?tab=)에 남겨서, 명예의 전당에서 달 현황을 보고 뒤로 오면 같은 탭이 열리도록
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab');
+  const mode: Mode = tab === 'all' || tab === 'fame' ? tab : 'month';
+  const setMode = (next: Mode) => setParams(next === 'month' ? {} : { tab: next }, { replace: true });
   const [month, setMonth] = useState(currentMonthKey());
   const maxMonth = currentMonthKey();
 

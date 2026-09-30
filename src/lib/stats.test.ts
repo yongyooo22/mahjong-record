@@ -11,9 +11,11 @@ import {
   defaultPlayerIds,
   gamesForMember,
   gamesInMonth,
+  isMonthKey,
   monthKey,
   previousMonthKey,
   sortGamesDesc,
+  yakumansOf,
 } from './stats';
 
 const members: Member[] = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
@@ -182,5 +184,14 @@ describe('명예의 전당', () => {
 
   it('대국이 없으면 빈 목록', () => {
     expect(computeHallOfFame([], members)).toEqual([]);
+    expect(yakumansOf([])).toEqual([]);
+  });
+
+  it('주소로 받은 월 키 확인', () => {
+    expect(isMonthKey('2025-03')).toBe(true);
+    expect(isMonthKey('2025-12')).toBe(true);
+    expect(isMonthKey('2025-13')).toBe(false);
+    expect(isMonthKey('2025-3')).toBe(false);
+    expect(isMonthKey('abc')).toBe(false);
   });
 });

@@ -279,6 +279,13 @@ export interface FameMonth {
   yakumans: FameYakuman[];
 }
 
+/** 대국 목록에서 나온 역만을 최신순으로 */
+export function yakumansOf(games: Game[]): FameYakuman[] {
+  return sortGamesDesc(games).flatMap((g) =>
+    g.yakumans.map((y) => ({ gameId: g.id, playedAt: g.playedAt, memberId: y.playerId, name: y.name })),
+  );
+}
+
 /** 대국이 있었던 달마다 1위와 역만 기록을 최신 달부터 */
 export function computeHallOfFame(games: Game[], members: Member[]): FameMonth[] {
   return availableMonths(games).map((month) => {
@@ -287,9 +294,12 @@ export function computeHallOfFame(games: Game[], members: Member[]): FameMonth[]
       month,
       games: monthGames.length,
       champion: computeRanking(monthGames, members)[0] ?? null,
-      yakumans: sortGamesDesc(monthGames).flatMap((g) =>
-        g.yakumans.map((y) => ({ gameId: g.id, playedAt: g.playedAt, memberId: y.playerId, name: y.name })),
-      ),
+      yakumans: yakumansOf(monthGames),
     };
   });
+}
+
+/** 'YYYY-MM' 형식의 올바른 월 키인지 (주소로 받은 값 확인용) */
+export function isMonthKey(value: string): boolean {
+  return /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
 }
