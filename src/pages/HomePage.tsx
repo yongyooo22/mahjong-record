@@ -1,25 +1,18 @@
-import { ChevronRight, Clock, Coins, Dices, Flame, PenLine, Sparkles, TrendingUp, Trophy, UserRound } from 'lucide-react';
+import { ChevronRight, Clock, PenLine, Trophy, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card, SectionHeader } from '../components/Card';
-import { Delta } from '../components/Delta';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { Mascot } from '../components/Mascot';
-import { Points } from '../components/Points';
-import { RankBadge } from '../components/RankBadge';
 import { Skeleton } from '../components/Skeleton';
-import { StatCard, StatGrid } from '../components/StatCard';
+import { StatGrid } from '../components/StatCard';
 import { headerBgStyle, LOGO_IMAGE } from '../config/images';
-import { GAME_TYPE_LABEL } from '../config/rules';
-import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
-import { computeResults, formatPoints } from '../lib/scoring';
-import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc, type TopMember } from '../lib/stats';
-import { useData, useMemberMap } from '../state/DataProvider';
+import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
+import { useData } from '../state/DataProvider';
 import app from '../styles/App.module.css';
-import ui from '../components/ui.module.css';
+import { GameRows, MonthRankingRows, MonthStatGrid } from './MonthSections';
 import s from './Home.module.css';
 
 const APP_SUBTITLE = '대국 기록 · 랭킹 · 통계';
@@ -57,24 +50,12 @@ function HomeHeader() {
 }
 
 /**
- * 이름을 값으로 쓰는 통계 카드 값 (최다 참여 / 누적 우마 1위 / 평균 우마 1위).
- * 동률이면 이름을 모두 나열합니다 (여러 줄로 줄바꿈).
- */
-function NameStat({ top, nameOf }: { top: TopMember | null; nameOf: (id: string) => string }) {
-  if (!top) return <span className={ui.statValueText}>-</span>;
-  const names = top.memberIds.map(nameOf);
-  if (names.length === 1) return <span className={ui.statValueText}>{names[0]}</span>;
-  return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{names.join(' · ')}</span>;
-}
-
-/**
  * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황, 랭킹, 최근 대국.
  * 개인 통계는 "내 기록" 탭에서 봅니다.
  */
 export function HomePage() {
   const navigate = useNavigate();
   const { status, error, retry, games, members } = useData();
-  const memberMap = useMemberMap();
   const month = currentMonthKey();
 
   const summary = useMemo(() => computeGroupSummary(games, month), [games, month]);
@@ -82,7 +63,6 @@ export function HomePage() {
   const recent = useMemo(() => sortGamesDesc(games).slice(0, 5), [games]);
 
   const loading = status === 'loading';
-  const nameOf = (id: string) => memberMap.get(id)?.name ?? '?';
 
   return (
     <>
@@ -133,41 +113,7 @@ export function HomePage() {
               ))}
             </StatGrid>
           ) : (
-            <StatGrid>
-              <StatCard
-                icon={<Dices size={18} color="#075844" />}
-                tone="#e4efe9"
-                label="이번 달 대국"
-                value={
-                  <>
-                    {summary.games.current ?? 0}
-                    <small>국</small>
-                  </>
-                }
-                sub={<Delta delta={summary.games.delta} digits={0} />}
-              />
-              <StatCard
-                icon={<Flame size={18} color="#075844" />}
-                tone="#e4efe9"
-                label="최다 참여"
-                value={<NameStat top={summary.mostActive} nameOf={nameOf} />}
-                sub={summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
-              />
-              <StatCard
-                icon={<Coins size={18} color="#075844" />}
-                tone="#e4efe9"
-                label="누적 우마 1위"
-                value={<NameStat top={summary.bestTotal} nameOf={nameOf} />}
-                sub={summary.bestTotal ? `누적 ${formatPoints(summary.bestTotal.value)}` : '아직 없음'}
-              />
-              <StatCard
-                icon={<TrendingUp size={18} color="#075844" />}
-                tone="#e4efe9"
-                label="평균 우마 1위"
-                value={<NameStat top={summary.bestAverage} nameOf={nameOf} />}
-                sub={summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
-              />
-            </StatGrid>
+            <MonthStatGrid summary={summary} gamesLabel="이번 달 대국" />
           )}
         </section>
 
@@ -179,20 +125,7 @@ export function HomePage() {
           ) : ranking.length === 0 ? (
             <EmptyState icon={<Trophy size={24} />} title="아직 이번 달 대국이 없어요" description="첫 대국을 기록하면 랭킹이 만들어져요." />
           ) : (
-            ranking.map((row) => (
-              <div key={row.member.id} className={s.rankRow}>
-                <RankBadge rank={row.position} pill />
-                <Avatar member={row.member} size={34} />
-                <div className={s.rankName}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.member.name}</span>
-                  {row.position === 1 && <span className={s.mvp}>MVP</span>}
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <Points value={row.totalPoints} className={s.rankPoints} />
-                  <div className={s.rankGames}>{row.games}국 · 평균 {formatAvgRank(row.avgRank)}위</div>
-                </div>
-              </div>
-            ))
+            <MonthRankingRows ranking={ranking} />
           )}
         </Card>
 
@@ -208,37 +141,7 @@ export function HomePage() {
               description="위의 ‘대국 기록하기’ 버튼으로 첫 기록을 남겨보세요."
             />
           ) : (
-            recent.map((g) => {
-              const results = computeResults(g.scores, g.rules, g.gameType);
-              const ordered = [...results].sort((a, b) => a.rank - b.rank);
-              return (
-                <Link key={g.id} to={`/games/${g.id}`} className={s.recent}>
-                  <div className={s.recentDate}>
-                    <strong>{formatDateShort(g.playedAt)}</strong>
-                    {formatWeekday(g.playedAt)}
-                  </div>
-                  <div className={s.recentBody}>
-                    <div className={s.recentTitle}>
-                      {g.place || '장소 미정'}
-                      <span className={s.recentType}>{GAME_TYPE_LABEL[g.gameType]}</span>
-                      {g.yakumans.length > 0 && (
-                        <span className={s.recentYakuman}>
-                          <Sparkles size={11} /> 역만
-                        </span>
-                      )}
-                    </div>
-                    <div className={s.recentPlayers}>
-                      {ordered.map((r) => (
-                        <span key={r.index} className={s.recentPlayer}>
-                          <RankBadge rank={r.rank} size="sm" />
-                          <span>{memberMap.get(g.playerIds[r.index])?.name ?? '?'}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })
+            <GameRows games={recent} />
           )}
         </Card>
 
