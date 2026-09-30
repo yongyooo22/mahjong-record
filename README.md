@@ -93,6 +93,8 @@ Redis 에는 다음 두 키만 사용합니다.
 | `mahjong:members` | 멤버 JSON 배열 |
 | `mahjong:games` | 대국 ID → 대국 JSON 해시 |
 
+이 Redis 는 다른 앱과 함께 쓰므로, 이 앱은 `mahjong:` 로 시작하는 키만 읽고 씁니다. 다른 앱의 키(`boardgame:` 등)를 건드리거나 DB 전체를 지우는 작업(`FLUSHDB`·`FLUSHALL`, Upstash 백업 복원 등)은 하지 않습니다. 자세한 규칙은 [`CLAUDE.md`](CLAUDE.md) 에 있습니다.
+
 ## 이미지 넣는 위치
 
 이미지는 저장소의 `public/images/` 아래에 직접 넣습니다. 경로 규칙은 `src/config/images.ts` 한 곳에서 관리합니다.
