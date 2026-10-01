@@ -87,4 +87,34 @@ describe('LocalStorageAdapter', () => {
     window.localStorage.setItem('mahjong.members', JSON.stringify([{ ...legacy[0], name: '연경이' }, ...legacy.slice(1)]));
     expect((await new LocalStorageAdapter().listMembers()).map((m) => m.id)).toEqual(['yeonkyung', 'minsu', 'jisu', 'hyunwoo']);
   });
+
+  it('후원 추가·수정·삭제가 새 인스턴스에서도 유지된다', async () => {
+    const a = new LocalStorageAdapter();
+    const sp = await a.addSponsor({
+      title: '1호 역만',
+      condition: '',
+      prize: '메가커피 기프티콘',
+      sponsorId: 'youngsik',
+      sponsorName: '',
+      status: 'open',
+      achieverId: null,
+      achievedAt: null,
+      paidAt: null,
+    });
+    expect(sp.id).toMatch(/^s-/);
+    expect(sp.sponsorName).toBe('영식');
+    const b = new LocalStorageAdapter();
+    expect((await b.listSponsors()).map((x) => x.id)).toEqual([sp.id]);
+
+    const achieved = await b.updateSponsor(sp.id, { status: 'achieved', achieverId: 'sowon', achievedAt: '2025-03-08T03:00:00.000Z' });
+    expect(achieved).toMatchObject({ status: 'achieved', achieverId: 'sowon', title: '1호 역만' });
+    await expect(b.updateSponsor(sp.id, { status: 'achieved', achieverId: 'ghost' })).rejects.toThrow('등록되지 않은 멤버');
+    await expect(b.updateSponsor('nope', { title: 'x' })).rejects.toThrow();
+    expect((await new LocalStorageAdapter().listSponsors())[0].status).toBe('achieved');
+
+    await b.deleteSponsor(sp.id);
+    expect(await new LocalStorageAdapter().listSponsors()).toEqual([]);
+    await expect(b.deleteSponsor(sp.id)).rejects.toThrow();
+  });
 });
+

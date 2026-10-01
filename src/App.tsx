@@ -10,6 +10,7 @@ import { MonthReportPage } from './pages/MonthReportPage';
 import { MyPage } from './pages/MyPage';
 import { RankingPage } from './pages/RankingPage';
 import { RecordPage } from './pages/RecordPage';
+import { SponsorsPage } from './pages/SponsorsPage';
 import { DataProvider } from './state/DataProvider';
 import s from './styles/App.module.css';
 
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/ranking/:month" element={<MonthReportPage />} />
               <Route path="/me" element={<MyPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/sponsors" element={<SponsorsPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </main>

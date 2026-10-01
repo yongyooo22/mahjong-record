@@ -1,11 +1,13 @@
 import { normalizeGame } from '../../../api/_lib/normalize';
+import { buildSponsorFields, normalizeSponsor, SponsorInputError } from '../../../api/_lib/sponsors';
 import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../../config/seedMembers';
-import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
+import type { Game, Member, MemberPatch, NewGame, NewMember, NewSponsor, Sponsor, SponsorPatch } from '../types';
 import { generateId } from './ids';
 import { StorageError, type StorageAdapter } from './StorageAdapter';
 
 const MEMBERS_KEY = 'mahjong.members';
 const GAMES_KEY = 'mahjong.games';
+const SPONSORS_KEY = 'mahjong.sponsors';
 
 function readJson<T>(store: Storage, key: string): T | null {
   try {
@@ -45,6 +47,20 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   private games(): Game[] {
     return (readJson<Game[]>(this.store, GAMES_KEY) ?? []).map(normalizeGame);
+  }
+
+  private sponsors(): Sponsor[] {
+    return (readJson<Sponsor[]>(this.store, SPONSORS_KEY) ?? []).map(normalizeSponsor);
+  }
+
+  /** 서버와 같은 규칙으로 후원 입력을 검증합니다. */
+  private sponsorFields(input: SponsorPatch, current: Sponsor | null): NewSponsor {
+    try {
+      return buildSponsorFields(input as Record<string, unknown>, current, this.members());
+    } catch (err) {
+      if (err instanceof SponsorInputError) throw new StorageError(err.message, 400);
+      throw err;
+    }
   }
 
   async listMembers(): Promise<Member[]> {
@@ -102,6 +118,39 @@ export class LocalStorageAdapter implements StorageAdapter {
       this.store,
       GAMES_KEY,
       list.filter((g) => g.id !== id),
+    );
+  }
+
+  async listSponsors(): Promise<Sponsor[]> {
+    return this.sponsors();
+  }
+
+  async addSponsor(input: NewSponsor): Promise<Sponsor> {
+    const fields = this.sponsorFields(input, null);
+    const now = new Date().toISOString();
+    const sponsor: Sponsor = { ...fields, id: generateId('s'), createdAt: now, updatedAt: now };
+    writeJson(this.store, SPONSORS_KEY, [...this.sponsors(), sponsor]);
+    return sponsor;
+  }
+
+  async updateSponsor(id: string, patch: SponsorPatch): Promise<Sponsor> {
+    const list = this.sponsors();
+    const idx = list.findIndex((s) => s.id === id);
+    if (idx < 0) throw new StorageError('후원을 찾을 수 없습니다.', 404);
+    const updated: Sponsor = { ...list[idx], ...this.sponsorFields(patch, list[idx]), updatedAt: new Date().toISOString() };
+    const next = [...list];
+    next[idx] = updated;
+    writeJson(this.store, SPONSORS_KEY, next);
+    return updated;
+  }
+
+  async deleteSponsor(id: string): Promise<void> {
+    const list = this.sponsors();
+    if (!list.some((s) => s.id === id)) throw new StorageError('후원을 찾을 수 없습니다.', 404);
+    writeJson(
+      this.store,
+      SPONSORS_KEY,
+      list.filter((s) => s.id !== id),
     );
   }
 }

@@ -5,6 +5,12 @@ export function formatDateShort(iso: string): string {
   return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
+/** 올해 날짜면 '9월 28일', 다른 해면 '2025년 9월 28일' */
+export function formatDateShortYear(iso: string, now: Date = new Date()): string {
+  const year = new Date(iso).getFullYear();
+  return year === now.getFullYear() ? formatDateShort(iso) : `${year}년 ${formatDateShort(iso)}`;
+}
+
 export function formatWeekday(iso: string): string {
   return `(${WEEKDAYS[new Date(iso).getDay()]})`;
 }

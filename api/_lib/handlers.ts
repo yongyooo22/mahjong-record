@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { Game, Member, Yakuman } from '../../src/lib/types';
+import type { Game, Member, NewSponsor, Sponsor, Yakuman } from '../../src/lib/types';
 import { normalizeGame } from './normalize';
 import { generateId, HttpError, methodNotAllowed, paramString, parseBody, withStore } from './http';
+import { buildSponsorFields, normalizeSponsor, SponsorInputError } from './sponsors';
 import { loadMembers, type Store } from './store';
 
 const GAME_TYPES = new Set(['hanchan', 'tonpuu']);
@@ -136,8 +137,15 @@ async function listGames(store: Store): Promise<Game[]> {
   return games;
 }
 
+/** 저장된 후원 전체 (최근 등록순) */
+async function listSponsors(store: Store): Promise<Sponsor[]> {
+  const sponsors = (await store.getSponsors()).map(normalizeSponsor);
+  sponsors.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+  return sponsors;
+}
+
 /**
- * GET /api/bootstrap — 앱을 열 때 멤버와 대국을 한 번에 돌려줍니다.
+ * GET /api/bootstrap — 앱을 열 때 멤버·대국·후원을 한 번에 돌려줍니다.
  * 요청이 하나라 서버리스 함수 콜드 스타트도 한 번만 겪고, Redis 조회는 동시에 합니다.
  */
 export const bootstrapHandler = (resolveStore?: () => Store | null) =>
@@ -146,8 +154,8 @@ export const bootstrapHandler = (resolveStore?: () => Store | null) =>
       methodNotAllowed(res, ['GET']);
       return;
     }
-    const [members, games] = await Promise.all([loadMembers(store), listGames(store)]);
-    res.status(200).json({ members, games });
+    const [members, games, sponsors] = await Promise.all([loadMembers(store), listGames(store), listSponsors(store)]);
+    res.status(200).json({ members, games, sponsors });
   }, resolveStore);
 
 /** GET /api/games, POST /api/games */
@@ -180,4 +188,55 @@ export const gameByIdHandler = (resolveStore?: () => Store | null) =>
     const removed = await store.deleteGame(id);
     if (!removed) throw new HttpError(404, '대국을 찾을 수 없습니다.');
     res.status(200).json({ ok: true, id });
+  }, resolveStore);
+
+function validateSponsor(input: Record<string, unknown>, current: Sponsor | null, members: Member[]): NewSponsor {
+  try {
+    return buildSponsorFields(input, current, members);
+  } catch (err) {
+    if (err instanceof SponsorInputError) throw new HttpError(400, err.message);
+    throw err;
+  }
+}
+
+/** GET /api/sponsors, POST /api/sponsors */
+export const sponsorsHandler = (resolveStore?: () => Store | null) =>
+  withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
+    if (req.method === 'GET') {
+      res.status(200).json(await listSponsors(store));
+      return;
+    }
+    if (req.method === 'POST') {
+      const body = parseBody(req);
+      const fields = validateSponsor(body, null, await loadMembers(store));
+      const now = new Date().toISOString();
+      const sponsor: Sponsor = { ...fields, id: generateId('s'), createdAt: now, updatedAt: now };
+      await store.putSponsor(sponsor);
+      res.status(201).json(sponsor);
+      return;
+    }
+    methodNotAllowed(res, ['GET', 'POST']);
+  }, resolveStore);
+
+/** PUT /api/sponsors/:id (내용·상태 수정), DELETE /api/sponsors/:id */
+export const sponsorByIdHandler = (resolveStore?: () => Store | null) =>
+  withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
+    const id = paramString(req.query.id);
+    if (req.method === 'PUT' || req.method === 'PATCH') {
+      const stored = await store.getSponsor(id);
+      if (!stored) throw new HttpError(404, '후원을 찾을 수 없습니다.');
+      const current = normalizeSponsor(stored);
+      const fields = validateSponsor(parseBody(req), current, await loadMembers(store));
+      const updated: Sponsor = { ...current, ...fields, id, updatedAt: new Date().toISOString() };
+      await store.putSponsor(updated);
+      res.status(200).json(updated);
+      return;
+    }
+    if (req.method === 'DELETE') {
+      const removed = await store.deleteSponsor(id);
+      if (!removed) throw new HttpError(404, '후원을 찾을 수 없습니다.');
+      res.status(200).json({ ok: true, id });
+      return;
+    }
+    methodNotAllowed(res, ['PUT', 'DELETE']);
   }, resolveStore);

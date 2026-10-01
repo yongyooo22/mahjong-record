@@ -76,6 +76,137 @@
   word-break: keep-all;
 }
 
+/* ---------- Stat card (compact: 홈 — 흰 카드 한 장 안의 2×2, 칸 사이는 옅은 십자 구분선) ---------- */
+.statsCompact {
+  position: relative;
+  display: block;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 8px 10px;
+  color: inherit;
+}
+
+.statsCompactLink {
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.statsCompactLink:active {
+  transform: scale(0.99);
+}
+
+@media (hover: hover) {
+  .statsCompactLink:hover {
+    box-shadow: 0 4px 16px rgba(32, 48, 57, 0.1), 0 1px 2px rgba(32, 48, 57, 0.04);
+  }
+}
+
+.statsCompactArrow {
+  position: absolute;
+  top: 15px;
+  right: 8px;
+  color: var(--text-faint);
+}
+
+.statsCompactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: #f2ece0;
+}
+
+.statCompact {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  background: var(--white);
+}
+
+.statCompactIcon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.statCompactBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.statCompactLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 오른쪽 위 칸의 라벨은 화살표 자리만큼 비웁니다 */
+.statsCompactLink .statCompact:nth-child(2) .statCompactLabel {
+  padding-right: 14px;
+}
+
+.statCompactValue {
+  margin-top: 1px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.statCompactValue small {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+.statCompactSub {
+  margin-top: 1px;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+/* 이름 값: 이름은 길면 말줄임, 옆의 수치는 항상 보이게 */
+.statCompactName {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.statCompactNames {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statCompactExtra {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 두 명 동률: 한 줄에 한 명씩 */
+.statCompactTie {
+  display: flex;
+  flex-direction: column;
+  font-size: 14.5px;
+}
+
 /* ---------- Card ---------- */
 .card {
   background: var(--white);
@@ -367,6 +498,18 @@
   background: var(--white);
   color: var(--green);
   box-shadow: 0 1px 3px rgba(32, 48, 57, 0.12);
+}
+
+.segFull {
+  display: flex;
+  width: 100%;
+}
+
+.segFull .segBtn {
+  flex: 1;
+  padding-left: 6px;
+  padding-right: 6px;
+  white-space: nowrap;
 }
 
 /* ---------- Modal ---------- */

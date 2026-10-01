@@ -1,4 +1,4 @@
-import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
+import type { Game, Member, MemberPatch, NewGame, NewMember, NewSponsor, Sponsor, SponsorPatch } from '../types';
 
 /**
  * 화면 컴포넌트는 이 인터페이스만 사용합니다.
@@ -12,6 +12,10 @@ export interface StorageAdapter {
   listGames(): Promise<Game[]>;
   addGame(input: NewGame): Promise<Game>;
   deleteGame(id: string): Promise<void>;
+  listSponsors(): Promise<Sponsor[]>;
+  addSponsor(input: NewSponsor): Promise<Sponsor>;
+  updateSponsor(id: string, patch: SponsorPatch): Promise<Sponsor>;
+  deleteSponsor(id: string): Promise<void>;
 }
 
 export class StorageError extends Error {

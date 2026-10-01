@@ -1,9 +1,10 @@
 import { Redis } from '@upstash/redis';
 import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from './seedMembers';
-import type { Game, Member } from '../../src/lib/types';
+import type { Game, Member, Sponsor } from '../../src/lib/types';
 
 export const MEMBERS_KEY = 'mahjong:members';
 export const GAMES_KEY = 'mahjong:games';
+export const SPONSORS_KEY = 'mahjong:sponsors';
 
 /** 서버 저장소 인터페이스 — Redis 구현과 테스트용 메모리 구현이 있습니다. */
 export interface Store {
@@ -12,6 +13,10 @@ export interface Store {
   getGames(): Promise<Game[]>;
   putGame(game: Game): Promise<void>;
   deleteGame(id: string): Promise<boolean>;
+  getSponsors(): Promise<Sponsor[]>;
+  getSponsor(id: string): Promise<Sponsor | null>;
+  putSponsor(sponsor: Sponsor): Promise<void>;
+  deleteSponsor(id: string): Promise<boolean>;
 }
 
 export function redisEnv(): { url: string; token: string } | null {
@@ -52,12 +57,34 @@ export class RedisStore implements Store {
     const removed = await this.redis.hdel(GAMES_KEY, id);
     return removed > 0;
   }
+
+  async getSponsors(): Promise<Sponsor[]> {
+    const hash = await this.redis.hgetall<Record<string, Sponsor | string>>(SPONSORS_KEY);
+    if (!hash) return [];
+    return Object.values(hash).map((v) => (typeof v === 'string' ? (JSON.parse(v) as Sponsor) : v));
+  }
+
+  async getSponsor(id: string): Promise<Sponsor | null> {
+    const value = await this.redis.hget<Sponsor | string>(SPONSORS_KEY, id);
+    if (value == null) return null;
+    return typeof value === 'string' ? (JSON.parse(value) as Sponsor) : value;
+  }
+
+  async putSponsor(sponsor: Sponsor): Promise<void> {
+    await this.redis.hset(SPONSORS_KEY, { [sponsor.id]: JSON.stringify(sponsor) });
+  }
+
+  async deleteSponsor(id: string): Promise<boolean> {
+    const removed = await this.redis.hdel(SPONSORS_KEY, id);
+    return removed > 0;
+  }
 }
 
 /** 테스트용 메모리 저장소 */
 export class MemoryStore implements Store {
   members: Member[] | null = null;
   games = new Map<string, Game>();
+  sponsors = new Map<string, Sponsor>();
 
   async getMembers() {
     return this.members ? [...this.members] : null;
@@ -73,6 +100,18 @@ export class MemoryStore implements Store {
   }
   async deleteGame(id: string) {
     return this.games.delete(id);
+  }
+  async getSponsors() {
+    return [...this.sponsors.values()];
+  }
+  async getSponsor(id: string) {
+    return this.sponsors.get(id) ?? null;
+  }
+  async putSponsor(sponsor: Sponsor) {
+    this.sponsors.set(sponsor.id, sponsor);
+  }
+  async deleteSponsor(id: string) {
+    return this.sponsors.delete(id);
   }
 }
 

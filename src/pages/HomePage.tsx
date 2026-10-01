@@ -7,12 +7,12 @@ import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { Mascot } from '../components/Mascot';
 import { Skeleton } from '../components/Skeleton';
-import { StatGrid } from '../components/StatCard';
 import { headerBgStyle, LOGO_IMAGE } from '../config/images';
 import { computeGroupSummary, computeRanking, currentMonthKey, formatMonthKey, gamesInMonth, sortGamesDesc } from '../lib/stats';
 import { useData } from '../state/DataProvider';
 import app from '../styles/App.module.css';
 import { GameRows, MonthRankingRows, MonthStatGrid } from './MonthSections';
+import { HomeSponsorCard } from './SponsorSections';
 import s from './Home.module.css';
 
 const APP_SUBTITLE = '대국 기록 · 랭킹 · 통계';
@@ -50,12 +50,12 @@ function HomeHeader() {
 }
 
 /**
- * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황, 랭킹, 최근 대국.
+ * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황 → 랭킹 → 후원 → 최근 대국.
  * 개인 통계는 "내 기록" 탭에서 봅니다.
  */
 export function HomePage() {
   const navigate = useNavigate();
-  const { status, error, retry, games, members } = useData();
+  const { status, error, retry, games, members, sponsors } = useData();
   const month = currentMonthKey();
 
   const summary = useMemo(() => computeGroupSummary(games, month), [games, month]);
@@ -107,13 +107,10 @@ export function HomePage() {
             )}
           </div>
           {loading ? (
-            <StatGrid>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} height={118} radius={16} />
-              ))}
-            </StatGrid>
+            <Skeleton height={136} radius={16} />
           ) : (
-            <MonthStatGrid summary={summary} gamesLabel="이번 달 대국" />
+            // 홈은 카드 한 장짜리 작은 형태 — 누르면 이번 달 월별 현황
+            <MonthStatGrid summary={summary} gamesLabel="이번 달 대국" variant="compact" to={`/ranking/${month}`} />
           )}
         </section>
 
@@ -128,6 +125,9 @@ export function HomePage() {
             <MonthRankingRows ranking={ranking} />
           )}
         </Card>
+
+        {/* 후원 현황 — 랭킹보다 눈에 띄지 않게, 랭킹 아래 */}
+        {loading ? <Skeleton height={92} radius={16} /> : <HomeSponsorCard sponsors={sponsors} />}
 
         {/* 최근 대국 */}
         <Card>

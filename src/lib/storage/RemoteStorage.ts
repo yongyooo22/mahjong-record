@@ -1,4 +1,4 @@
-import type { Game, Member, MemberPatch, NewGame, NewMember } from '../types';
+import type { Game, Member, MemberPatch, NewGame, NewMember, NewSponsor, Sponsor, SponsorPatch } from '../types';
 import { StorageError, type StorageAdapter } from './StorageAdapter';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -35,10 +35,10 @@ export class RemoteStorageAdapter implements StorageAdapter {
   readonly kind = 'remote' as const;
 
   /**
-   * 앱을 열 때 멤버·대국을 한 번의 요청으로 받습니다.
+   * 앱을 열 때 멤버·대국·후원을 한 번의 요청으로 받습니다.
    * 서버에 Redis 가 설정되지 않았거나 /api 자체가 없으면(정적 호스팅, vite 단독 실행) null 을 돌려줍니다.
    */
-  async bootstrap(): Promise<{ members: Member[]; games: Game[] } | null> {
+  async bootstrap(): Promise<{ members: Member[]; games: Game[]; sponsors: Sponsor[] } | null> {
     let res: Response;
     try {
       res = await fetch('/api/bootstrap', { headers: { Accept: 'application/json' } });
@@ -46,14 +46,18 @@ export class RemoteStorageAdapter implements StorageAdapter {
       throw new StorageError('서버에 연결할 수 없습니다. 네트워크를 확인해 주세요.');
     }
     if (res.status === 404) return null;
-    const body = (await res.json().catch(() => null)) as { members?: unknown; games?: unknown; code?: unknown; error?: unknown } | null;
+    const body = (await res.json().catch(() => null)) as { members?: unknown; games?: unknown; sponsors?: unknown; code?: unknown; error?: unknown } | null;
     if (res.status === 503 && body?.code === 'STORAGE_NOT_CONFIGURED') return null;
     if (!res.ok) {
       throw new StorageError(typeof body?.error === 'string' ? body.error : `요청에 실패했습니다. (${res.status})`, res.status);
     }
     // JSON 이 아니면(index.html 등) API 가 없는 환경
     if (!body || !Array.isArray(body.members) || !Array.isArray(body.games)) return null;
-    return { members: body.members as Member[], games: body.games as Game[] };
+    return {
+      members: body.members as Member[],
+      games: body.games as Game[],
+      sponsors: Array.isArray(body.sponsors) ? (body.sponsors as Sponsor[]) : [],
+    };
   }
 
   listMembers(): Promise<Member[]> {
@@ -81,5 +85,24 @@ export class RemoteStorageAdapter implements StorageAdapter {
 
   async deleteGame(id: string): Promise<void> {
     await request<unknown>(`/api/games/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+
+  listSponsors(): Promise<Sponsor[]> {
+    return request<Sponsor[]>('/api/sponsors');
+  }
+
+  addSponsor(input: NewSponsor): Promise<Sponsor> {
+    return request<Sponsor>('/api/sponsors', { method: 'POST', body: JSON.stringify(input) });
+  }
+
+  updateSponsor(id: string, patch: SponsorPatch): Promise<Sponsor> {
+    return request<Sponsor>(`/api/sponsors/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(patch),
+    });
+  }
+
+  async deleteSponsor(id: string): Promise<void> {
+    await request<unknown>(`/api/sponsors/${encodeURIComponent(id)}`, { method: 'DELETE' });
   }
 }

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { openStorage, RemoteStorageAdapter, type StorageAdapter } from '../lib/storage';
 import { readSnapshot, writeSnapshot } from '../lib/storage/snapshot';
-import type { Game, Member, MemberPatch, NewGame, NewMember } from '../lib/types';
+import type { Game, Member, MemberPatch, NewGame, NewMember, NewSponsor, Sponsor, SponsorPatch } from '../lib/types';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -11,6 +11,7 @@ interface DataContextValue {
   storageKind: 'remote' | 'local' | null;
   members: Member[];
   games: Game[];
+  sponsors: Sponsor[];
   /** 이 기기에 저장해 둔 데이터를 보여 주면서 서버의 최신 데이터를 받는 중 */
   syncing: boolean;
   retry: () => void;
@@ -18,6 +19,9 @@ interface DataContextValue {
   deleteGame: (id: string) => Promise<void>;
   addMember: (input: NewMember) => Promise<Member>;
   updateMember: (id: string, patch: MemberPatch) => Promise<Member>;
+  addSponsor: (input: NewSponsor) => Promise<Sponsor>;
+  updateSponsor: (id: string, patch: SponsorPatch) => Promise<Sponsor>;
+  deleteSponsor: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -28,7 +32,7 @@ function errorMessage(err: unknown): string {
 }
 
 /**
- * 멤버·대국 데이터를 한 곳에서 관리합니다.
+ * 멤버·대국·후원 데이터를 한 곳에서 관리합니다.
  * 화면 컴포넌트는 useData() 만 사용하고, 저장소 구현은 알지 못합니다.
  */
 export function DataProvider({ children }: { children: ReactNode }) {
@@ -38,6 +42,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [storageKind, setStorageKind] = useState<'remote' | 'local' | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [games, setGames] = useState<Game[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -51,6 +56,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setStorageKind('remote');
       setMembers(snapshot.members);
       setGames(snapshot.games);
+      setSponsors(snapshot.sponsors);
       setStatus('ready');
       setSyncing(true);
     } else {
@@ -58,12 +64,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
     (async () => {
       try {
-        const { storage, members: m, games: g } = await openStorage();
+        const { storage, members: m, games: g, sponsors: sp } = await openStorage();
         if (cancelled) return;
         storageRef.current = storage;
         setStorageKind(storage.kind);
         setMembers(m);
         setGames(g);
+        setSponsors(sp);
         setStatus('ready');
       } catch (err) {
         if (cancelled) return;
@@ -83,8 +90,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // 서버 데이터가 바뀔 때마다 다음 접속용으로 저장합니다. localStorage 저장소면 원본이 이미 이 기기에 있으므로 지웁니다.
   useEffect(() => {
     if (status !== 'ready' || syncing) return;
-    writeSnapshot(storageKind === 'remote' ? { members, games } : null);
-  }, [status, syncing, storageKind, members, games]);
+    writeSnapshot(storageKind === 'remote' ? { members, games, sponsors } : null);
+  }, [status, syncing, storageKind, members, games, sponsors]);
 
   const retry = useCallback(() => {
     storageRef.current = null;
@@ -120,9 +127,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return member;
   }, []);
 
+  const addSponsor = useCallback(async (input: NewSponsor) => {
+    const sponsor = await storage().addSponsor(input);
+    setSponsors((prev) => [sponsor, ...prev]);
+    return sponsor;
+  }, []);
+
+  const updateSponsor = useCallback(async (id: string, patch: SponsorPatch) => {
+    const sponsor = await storage().updateSponsor(id, patch);
+    setSponsors((prev) => prev.map((s) => (s.id === id ? sponsor : s)));
+    return sponsor;
+  }, []);
+
+  const deleteSponsor = useCallback(async (id: string) => {
+    await storage().deleteSponsor(id);
+    setSponsors((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
   const value = useMemo<DataContextValue>(
-    () => ({ status, error, storageKind, members, games, syncing, retry, addGame, deleteGame, addMember, updateMember }),
-    [status, error, storageKind, members, games, syncing, retry, addGame, deleteGame, addMember, updateMember],
+    () => ({
+      status,
+      error,
+      storageKind,
+      members,
+      games,
+      sponsors,
+      syncing,
+      retry,
+      addGame,
+      deleteGame,
+      addMember,
+      updateMember,
+      addSponsor,
+      updateSponsor,
+      deleteSponsor,
+    }),
+    [status, error, storageKind, members, games, sponsors, syncing, retry, addGame, deleteGame, addMember, updateMember, addSponsor, updateSponsor, deleteSponsor],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
