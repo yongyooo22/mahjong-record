@@ -50,7 +50,7 @@ function HomeHeader() {
 }
 
 /**
- * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황 → 랭킹 → 후원 → 최근 대국.
+ * 홈: 누가 접속하든 같은 화면 — 모임 전체의 이번 달 현황 → 랭킹 → 최근 대국 → 후원.
  * 개인 통계는 "내 기록" 탭에서 봅니다.
  */
 export function HomePage() {
@@ -126,9 +126,6 @@ export function HomePage() {
           )}
         </Card>
 
-        {/* 후원 현황 — 랭킹보다 눈에 띄지 않게, 랭킹 아래 */}
-        {loading ? <Skeleton height={92} radius={16} /> : <HomeSponsorCard sponsors={sponsors} />}
-
         {/* 최근 대국 */}
         <Card>
           <SectionHeader icon={<Clock size={18} />} title="최근 대국" right="전체 보기" to="/games" />
@@ -144,6 +141,9 @@ export function HomePage() {
             <GameRows games={recent} />
           )}
         </Card>
+
+        {/* 후원 현황 — 홈 맨 아래 */}
+        {loading ? <Skeleton height={92} radius={16} /> : <HomeSponsorCard sponsors={sponsors} />}
 
       </div>
     </>
