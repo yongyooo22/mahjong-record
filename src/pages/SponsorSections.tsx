@@ -71,6 +71,7 @@ export function HomeSponsorCard({ sponsors }: { sponsors: Sponsor[] }) {
               </div>
               <div className={s.homeItemMeta}>
                 {sp.prize} · 후원자 {sponsorDisplayName(sp, memberMap)}
+                {sp.repeat && sp.achievements.length > 0 && ` · 달성 ${sp.achievements.length}명`}
               </div>
             </li>
           ))}
@@ -91,11 +92,11 @@ export function HomeSponsorCard({ sponsors }: { sponsors: Sponsor[] }) {
           <PartyPopper size={14} className={s.recentIcon} aria-hidden="true" />
           <span className="visually-hidden">최근 달성:</span>
           <span className={s.recentText}>
-            <b className={s.recentTitle}>{recent.title}</b>
-            <span className={s.recentName}>{memberMap.get(recent.achieverId ?? '')?.name ?? '?'}</span>
-            {recent.achievedAt && <span className={s.recentDate}>{formatDateShortYear(recent.achievedAt)}</span>}
+            <b className={s.recentTitle}>{recent.sponsor.title}</b>
+            <span className={s.recentName}>{memberMap.get(recent.memberId)?.name ?? '?'}</span>
+            <span className={s.recentDate}>{formatDateShortYear(recent.achievedAt)}</span>
           </span>
-          <PayoutChip status={recent.status} />
+          <PayoutChip status={recent.paid ? 'paid' : 'achieved'} />
         </div>
       )}
     </Link>

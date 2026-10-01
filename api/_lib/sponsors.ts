@@ -1,10 +1,11 @@
-import type { Member, NewSponsor, Sponsor, SponsorStatus } from '../../src/lib/types';
+import type { Member, NewSponsor, Sponsor, SponsorAchievement, SponsorStatus } from '../../src/lib/types';
 
 export const SPONSOR_STATUSES: readonly SponsorStatus[] = ['open', 'achieved', 'paid'];
 export const SPONSOR_TITLE_MAX = 30;
 export const SPONSOR_CONDITION_MAX = 200;
 export const SPONSOR_PRIZE_MAX = 40;
 export const SPONSOR_NAME_MAX = 20;
+export const SPONSOR_ACHIEVEMENTS_MAX = 50;
 
 /** 후원 입력이 올바르지 않을 때. 서버는 400 으로, localStorage 저장소는 StorageError 로 바꿔 알립니다. */
 export class SponsorInputError extends Error {}
@@ -52,9 +53,15 @@ export function buildSponsorFields(
   const sponsorName = sponsorId ? text(memberName.get(sponsorId), SPONSOR_NAME_MAX) : text(pick('sponsorName'), SPONSOR_NAME_MAX);
   if (!sponsorName) throw new SponsorInputError('후원자를 입력해 주세요.');
 
+  // 사람마다 달성하는 후원은 늘 진행 중이고, 달성 기록은 achievements 에 쌓입니다.
+  if (pick('repeat') === true) {
+    const achievements = buildAchievements(pick('achievements'), memberName, now);
+    return { title, condition, prize, sponsorId, sponsorName, status: 'open', achieverId: null, achievedAt: null, paidAt: null, repeat: true, achievements };
+  }
+
   const status = pick('status') ?? 'open';
   if (!SPONSOR_STATUSES.includes(status as SponsorStatus)) throw new SponsorInputError('후원 상태가 올바르지 않습니다.');
-  const base = { title, condition, prize, sponsorId, sponsorName };
+  const base = { title, condition, prize, sponsorId, sponsorName, repeat: false, achievements: [] };
   if (status === 'open') return { ...base, status, achieverId: null, achievedAt: null, paidAt: null };
 
   const achieverId = id(pick('achieverId'));
@@ -63,6 +70,23 @@ export function buildSponsorFields(
   const achievedAt = date(pick('achievedAt'), '달성일') ?? now.toISOString();
   const paidAt = status === 'paid' ? (date(pick('paidAt'), '지급일') ?? now.toISOString()) : null;
   return { ...base, status: status as SponsorStatus, achieverId, achievedAt, paidAt };
+}
+
+/** 사람마다 달성 기록 검증: 등록된 멤버, 한 사람당 한 번, 달성일 없으면 지금 */
+function buildAchievements(raw: unknown, memberName: Map<string, string>, now: Date): SponsorAchievement[] {
+  if (raw == null) return [];
+  if (!Array.isArray(raw)) throw new SponsorInputError('달성 기록이 올바르지 않습니다.');
+  if (raw.length > SPONSOR_ACHIEVEMENTS_MAX) throw new SponsorInputError(`달성 기록은 최대 ${SPONSOR_ACHIEVEMENTS_MAX}건까지예요.`);
+  const seen = new Set<string>();
+  return raw.map((item) => {
+    const a = (item ?? {}) as Record<string, unknown>;
+    const memberId = id(a.memberId);
+    if (!memberId) throw new SponsorInputError('달성한 사람을 골라 주세요.');
+    if (!memberName.has(memberId)) throw new SponsorInputError('달성한 사람이 등록되지 않은 멤버입니다.');
+    if (seen.has(memberId)) throw new SponsorInputError('같은 사람이 두 번 달성할 수 없어요.');
+    seen.add(memberId);
+    return { memberId, achievedAt: date(a.achievedAt, '달성일') ?? now.toISOString(), paidAt: date(a.paidAt, '지급일') };
+  });
 }
 
 /** 저장된 후원 레코드를 현재 스키마로 맞춥니다 (빠진 필드는 기본값). 서버와 localStorage 저장소가 함께 씁니다. */
@@ -81,6 +105,12 @@ export function normalizeSponsor(raw: Partial<Sponsor>): Sponsor {
     achieverId: status === 'open' ? null : strOrNull(raw.achieverId),
     achievedAt: status === 'open' ? null : strOrNull(raw.achievedAt),
     paidAt: status === 'paid' ? strOrNull(raw.paidAt) : null,
+    // 사람마다 달성 기능 이전 기록에는 repeat·achievements 가 없습니다.
+    repeat: raw.repeat === true,
+    achievements:
+      raw.repeat === true && Array.isArray(raw.achievements)
+        ? raw.achievements.filter((a): a is SponsorAchievement => !!a && typeof a.memberId === 'string' && typeof a.achievedAt === 'string').map((a) => ({ ...a, paidAt: strOrNull(a.paidAt) }))
+        : [],
     createdAt: str(raw.createdAt),
     updatedAt: str(raw.updatedAt) || str(raw.createdAt),
   };

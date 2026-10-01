@@ -27,6 +27,8 @@ const sponsor: Sponsor = {
   achieverId: null,
   achievedAt: null,
   paidAt: null,
+  repeat: false,
+  achievements: [],
   createdAt: '2025-03-01T00:00:00.000Z',
   updatedAt: '2025-03-01T00:00:00.000Z',
 };
