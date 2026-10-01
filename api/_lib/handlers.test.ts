@@ -257,4 +257,40 @@ describe('API 핸들러', () => {
     await byId(mockReq('POST', { query: { id: 'x' } }), r.res);
     expect(r.out.status).toBe(405);
   });
+
+  it('후원: 사람마다 달성 (각자 한 번씩)', async () => {
+    const store = new MemoryStore();
+    const list = sponsorsHandler(() => store);
+    const byId = sponsorByIdHandler(() => store);
+    let r = mockRes();
+    await list(mockReq('POST', { body: { title: '1호 역만 (각자)', prize: '커피', sponsorId: 'youngsik', repeat: true, status: 'achieved', achieverId: 'sowon' } }), r.res);
+    expect(r.out.status).toBe(201);
+    const created = r.out.body as { id: string };
+    // 사람마다 달성은 늘 진행 중이고 한 번 달성 필드는 비움
+    expect(r.out.body).toMatchObject({ repeat: true, achievements: [], status: 'open', achieverId: null });
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { achievements: [{ memberId: 'sowon', achievedAt: '2026-09-28T03:00:00.000Z' }, { memberId: 'chanyoung', paidAt: '2026-10-01T03:00:00.000Z' }] } }), r.res);
+    expect(r.out.status).toBe(200);
+    const updated = r.out.body as { title: string; status: string; achievements: { memberId: string; achievedAt: string; paidAt: string | null }[] };
+    expect(updated.title).toBe('1호 역만 (각자)');
+    expect(updated.status).toBe('open');
+    expect(updated.achievements.map((a) => [a.memberId, a.paidAt])).toEqual([
+      ['sowon', null],
+      ['chanyoung', '2026-10-01T03:00:00.000Z'],
+    ]);
+    expect(updated.achievements[1].achievedAt).toBeTruthy();
+
+    for (const achievements of [[{ memberId: 'ghost' }], [{ memberId: 'sowon' }, { memberId: 'sowon' }], [{ memberId: 'sowon', achievedAt: 'nope' }], 'x']) {
+      r = mockRes();
+      await byId(mockReq('PUT', { query: { id: created.id }, body: { achievements } }), r.res);
+      expect(r.out.status).toBe(400);
+    }
+
+    // 한 번만 달성하는 후원은 achievements 를 무시
+    r = mockRes();
+    await list(mockReq('POST', { body: { title: 'x', prize: 'x', sponsorName: 'a', achievements: [{ memberId: 'sowon' }] } }), r.res);
+    expect(r.out.body).toMatchObject({ repeat: false, achievements: [] });
+  });
 });
+

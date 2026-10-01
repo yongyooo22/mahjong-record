@@ -39,7 +39,21 @@ export interface Game {
 /** 후원 상태: 진행 중 → 달성(상품 지급 대기) → 상품 지급 완료 */
 export type SponsorStatus = 'open' | 'achieved' | 'paid';
 
-/** 후원 한 건 — 누군가 조건을 걸고 상품을 겁니다 (예: 1호 역만 → 메가커피 기프티콘) */
+/** 사람마다 달성하는 후원에서 한 사람의 달성 기록 */
+export interface SponsorAchievement {
+  /** 달성한 멤버 ID (한 후원에 한 사람당 한 번) */
+  memberId: string;
+  /** 달성일 (ISO 문자열) */
+  achievedAt: string;
+  /** 상품 지급일 (ISO 문자열, 아직이면 null) */
+  paidAt: string | null;
+}
+
+/**
+ * 후원 한 건 — 누군가 조건을 걸고 상품을 겁니다 (예: 1호 역만 → 메가커피 기프티콘).
+ * - 한 번만 달성: status 와 achieverId·achievedAt·paidAt 으로 진행 중 → 달성 → 지급 완료
+ * - 사람마다 달성(repeat, 예: 각자 1호 역만이면 사 줌): 늘 진행 중이고, 달성은 achievements 에 사람마다 쌓임
+ */
 export interface Sponsor {
   id: string;
   /** 제목 (예: 1호 역만) */
@@ -59,6 +73,10 @@ export interface Sponsor {
   achievedAt: string | null;
   /** 상품 지급 완료일 (ISO 문자열, 지급 완료일 때만) */
   paidAt: string | null;
+  /** 사람마다 한 번씩 달성할 수 있는 후원인지 */
+  repeat: boolean;
+  /** 사람마다 달성한 기록 (repeat 일 때만, 아니면 빈 배열) */
+  achievements: SponsorAchievement[];
   createdAt: string;
   updatedAt: string;
 }

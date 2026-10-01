@@ -360,3 +360,57 @@
 .deleteLink:active {
   background: var(--red-soft);
 }
+
+/* ---- 사람마다 달성: 카드 안 달성 기록 ---- */
+.achieveList {
+  margin: 0 14px;
+  padding: 8px 0 4px;
+  border-top: 1px dashed var(--line);
+}
+
+.achieveHead {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.achieveHead svg {
+  color: var(--gold);
+}
+
+.achieveRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 0;
+  text-align: left;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.achieveRow:active {
+  background: #fdfbf6;
+}
+
+.achieveRow b {
+  font-weight: 700;
+  max-width: 7em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achieveDate {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

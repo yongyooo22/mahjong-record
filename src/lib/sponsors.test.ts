@@ -14,6 +14,8 @@ function sponsor(id: string, patch: Partial<Sponsor> = {}): Sponsor {
     achieverId: null,
     achievedAt: null,
     paidAt: null,
+    repeat: false,
+    achievements: [],
     createdAt: '2026-09-01T00:00:00.000Z',
     updatedAt: '2026-09-01T00:00:00.000Z',
     ...patch,
@@ -43,12 +45,26 @@ describe('후원 목록', () => {
     expect(recentAchievement([oldPaid], NOW)).toBeNull();
 
     const recentPaid = sponsor('recentPaid', { status: 'paid', achieverId: 'm', achievedAt: '2026-09-20T00:00:00.000Z', paidAt: '2026-09-21T00:00:00.000Z' });
-    expect(recentAchievement([oldPaid, recentPaid], NOW)?.id).toBe('recentPaid');
+    expect(recentAchievement([oldPaid, recentPaid], NOW)?.sponsor.id).toBe('recentPaid');
 
     const oldWaiting = sponsor('oldWaiting', { status: 'achieved', achieverId: 'm', achievedAt: '2026-06-01T00:00:00.000Z' });
-    expect(recentAchievement([oldPaid, oldWaiting], NOW)?.id).toBe('oldWaiting');
+    expect(recentAchievement([oldPaid, oldWaiting], NOW)?.sponsor.id).toBe('oldWaiting');
     // 더 최근에 달성한 것이 우선
-    expect(recentAchievement([oldWaiting, recentPaid], NOW)?.id).toBe('recentPaid');
+    expect(recentAchievement([oldWaiting, recentPaid], NOW)?.sponsor.id).toBe('recentPaid');
+  });
+
+  it('사람마다 달성하는 후원은 사람마다 최근 달성으로 센다', () => {
+    const each = sponsor('each', {
+      repeat: true,
+      achievements: [
+        { memberId: 'a', achievedAt: '2026-09-20T00:00:00.000Z', paidAt: '2026-09-21T00:00:00.000Z' },
+        { memberId: 'b', achievedAt: '2026-09-25T00:00:00.000Z', paidAt: null },
+      ],
+    });
+    const recent = recentAchievement([each], NOW);
+    expect(recent).toMatchObject({ memberId: 'b', paid: false });
+    expect(recent?.sponsor.id).toBe('each');
+    expect(groupSponsors([each]).open.map((s) => s.id)).toEqual(['each']);
   });
 
   it('후원자 이름은 멤버면 지금 이름, 아니면 저장된 이름', () => {

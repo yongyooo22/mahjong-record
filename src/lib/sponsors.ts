@@ -36,14 +36,31 @@ export function groupSponsors(sponsors: Sponsor[]): Record<SponsorStatus, Sponso
   return groups;
 }
 
+/** 달성 한 건 — 한 번만 달성하는 후원의 달성, 또는 사람마다 달성하는 후원의 한 사람 */
+export interface AchievementEvent {
+  sponsor: Sponsor;
+  memberId: string;
+  achievedAt: string;
+  paid: boolean;
+}
+
+/** 후원 하나의 달성 기록 (달성 전이면 빈 배열) */
+export function achievementsOf(sponsor: Sponsor): AchievementEvent[] {
+  if (sponsor.repeat) return sponsor.achievements.map((a) => ({ sponsor, memberId: a.memberId, achievedAt: a.achievedAt, paid: a.paidAt !== null }));
+  if (sponsor.status === 'open' || !sponsor.achieverId || !sponsor.achievedAt) return [];
+  return [{ sponsor, memberId: sponsor.achieverId, achievedAt: sponsor.achievedAt, paid: sponsor.status === 'paid' }];
+}
+
 /**
- * 홈 "최근 달성" 한 줄에 보일 후원: 상품 지급 전인 후원(언제 달성했든)과
- * 최근 {@link RECENT_ACHIEVEMENT_DAYS}일 안에 달성한 지급 완료 후원 중 가장 최근에 달성한 것. 없으면 null.
+ * 홈 "최근 달성" 한 줄에 보일 달성: 상품 지급 전인 달성(언제 달성했든)과
+ * 최근 {@link RECENT_ACHIEVEMENT_DAYS}일 안에 달성한 지급 완료 달성 중 가장 최근 것. 없으면 null.
+ * 사람마다 달성하는 후원은 사람마다 따로 셉니다.
  */
-export function recentAchievement(sponsors: Sponsor[], now: Date = new Date()): Sponsor | null {
+export function recentAchievement(sponsors: Sponsor[], now: Date = new Date()): AchievementEvent | null {
   const since = now.getTime() - RECENT_ACHIEVEMENT_DAYS * DAY_MS;
-  const candidates = sponsors.filter((s) => s.status === 'achieved' || (s.status === 'paid' && time(s.achievedAt) >= since));
-  return candidates.sort(byAchievedDesc)[0] ?? null;
+  const candidates = sponsors.flatMap(achievementsOf).filter((a) => !a.paid || time(a.achievedAt) >= since);
+  candidates.sort((a, b) => time(b.achievedAt) - time(a.achievedAt) || byCreated(a.sponsor, b.sponsor));
+  return candidates[0] ?? null;
 }
 
 /** 후원자 이름 — 멤버면 지금 이름, 아니면 저장된 이름 */

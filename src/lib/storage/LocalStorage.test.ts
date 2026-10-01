@@ -100,6 +100,8 @@ describe('LocalStorageAdapter', () => {
       achieverId: null,
       achievedAt: null,
       paidAt: null,
+      repeat: false,
+      achievements: [],
     });
     expect(sp.id).toMatch(/^s-/);
     expect(sp.sponsorName).toBe('영식');
