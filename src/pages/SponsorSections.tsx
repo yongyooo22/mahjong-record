@@ -70,7 +70,7 @@ export function HomeSponsorCard({ sponsors }: { sponsors: Sponsor[] }) {
                 <SponsorStatusChip status={sp.status} />
               </div>
               <div className={s.homeItemMeta}>
-                {sp.prize} · 후원 {sponsorDisplayName(sp, memberMap)}
+                {sp.prize} · 후원자 {sponsorDisplayName(sp, memberMap)}
               </div>
             </li>
           ))}
