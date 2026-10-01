@@ -1,12 +1,14 @@
 import { normalizeGame } from '../../../api/_lib/normalize';
-import type { Game, Member } from '../types';
+import { normalizeSponsor } from '../../../api/_lib/sponsors';
+import type { Game, Member, Sponsor } from '../types';
 
 const SNAPSHOT_KEY = 'mahjong.remoteSnapshot';
 
-/** 마지막으로 서버에서 받은 멤버·대국 */
+/** 마지막으로 서버에서 받은 멤버·대국·후원 */
 export interface Snapshot {
   members: Member[];
   games: Game[];
+  sponsors: Sponsor[];
 }
 
 function defaultStore(): Storage | null {
@@ -27,7 +29,9 @@ export function readSnapshot(store: Storage | null = defaultStore()): Snapshot |
     if (!raw) return null;
     const value = JSON.parse(raw) as Partial<Snapshot> | null;
     if (!value || !Array.isArray(value.members) || !Array.isArray(value.games)) return null;
-    return { members: value.members, games: value.games.map(normalizeGame) };
+    // 후원 기능 이전에 저장한 스냅샷에는 sponsors 가 없습니다.
+    const sponsors = Array.isArray(value.sponsors) ? value.sponsors.map(normalizeSponsor) : [];
+    return { members: value.members, games: value.games.map(normalizeGame), sponsors };
   } catch {
     return null;
   }

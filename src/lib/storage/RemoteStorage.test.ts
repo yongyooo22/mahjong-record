@@ -11,11 +11,16 @@ describe('RemoteStorageAdapter.bootstrap', () => {
     vi.unstubAllGlobals();
   });
 
-  it('멤버·대국을 한 번의 요청으로 받는다', async () => {
-    respond(200, JSON.stringify({ members: [{ id: 'a' }], games: [] }));
-    await expect(new RemoteStorageAdapter().bootstrap()).resolves.toEqual({ members: [{ id: 'a' }], games: [] });
+  it('멤버·대국·후원을 한 번의 요청으로 받는다', async () => {
+    respond(200, JSON.stringify({ members: [{ id: 'a' }], games: [], sponsors: [{ id: 's' }] }));
+    await expect(new RemoteStorageAdapter().bootstrap()).resolves.toEqual({ members: [{ id: 'a' }], games: [], sponsors: [{ id: 's' }] });
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(vi.mocked(fetch).mock.calls[0][0]).toBe('/api/bootstrap');
+  });
+
+  it('후원이 없는 응답(예전 서버)은 빈 후원 목록으로 받는다', async () => {
+    respond(200, JSON.stringify({ members: [{ id: 'a' }], games: [] }));
+    await expect(new RemoteStorageAdapter().bootstrap()).resolves.toEqual({ members: [{ id: 'a' }], games: [], sponsors: [] });
   });
 
   it('Redis 미설정·API 없음이면 null (localStorage 폴백)', async () => {

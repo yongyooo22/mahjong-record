@@ -5,11 +5,14 @@
 친구 모임용 리치마작 대국 기록 웹앱입니다. 모바일 브라우저에서 쓰는 것을 기본으로 하며, 친구들이 각자 폰으로 접속해 같은 기록을 보고 입력할 수 있습니다.
 
 - 대국 기록: 4인 반장전/동풍전, 참가자는 가장 최근 대국 멤버가 기본 선택, 장소 선택(기본 마작카페·이수마장 + 직접 추가), 최종 점수 입력 → 순위·우마 자동 계산 (작혼 방식), 역만이 나왔으면 누가 무슨 역만인지 기록
-- 홈 (모두 같은 화면): 이번 달 대국 수 / 최다 참여 / 평균 우마 1위 / 1위 최다, 이번 달 랭킹(MVP), 최근 대국
+- 홈 (모두 같은 화면): 이번 달 모임 현황 → 이번 달 랭킹(MVP) → 후원 현황 → 최근 대국 순서
+  - 모임 현황은 카드 한 장에 대국 수 / 최다 참여 / 누적 우마 1위 / 평균 우마 1위를 2×2 로 작게 담고, 누르면 이번 달 월별 현황(`/ranking/YYYY-MM`)으로
+  - 후원 현황은 진행 중인 후원을 최대 2개(더 있으면 "외 N개의 후원 보기"), 최근 달성한 후원이 있으면 한 줄(지급 대기 / 지급 완료). 진행 중인 후원이 없어도 후원 화면으로 가는 입구로 작게 남음
 - 기록: 월별 필터, 상세 보기, 삭제
 - 랭킹: 월별 / 전체 기간, 누적 우마 기준. **명예의 전당** 탭에서 달마다 1위와 역만을 낸 사람을 최신 달부터 모아 보기 (이번 달은 "진행 중"). 달 카드를 누르면 그 달 현황(홈과 같은 통계 카드·월간 랭킹·역만·그 달 대국 전체)을 `/ranking/YYYY-MM` 에서 보기
 - 내 기록: 각자 자기 폰에서 "나"를 고르면 참여 횟수 / 1위 횟수 / 라스 횟수 / 평균 우마 (지난달 대비), 순위 분포, 내가 참여한 대국과 역만
 - 멤버: 추가·수정, 캐릭터(아바타) 이미지 선택, 대국 기록이 있는 멤버는 비활성 처리
+- 후원 (`/sponsors`, 홈의 후원 현황 카드에서 들어감): 누군가 조건을 걸고 상품을 거는 것 (예: 1호 역만 → 메가커피 기프티콘). 진행 중 / 달성(지급 대기) / 지급 완료로 나눠 보기, 추가·수정·삭제, 카드를 눌러 상태 바꾸기(달성한 사람·달성일, 상품 지급일). 후원자는 멤버 중에서 고르거나 이름을 직접 입력
 
 ## 기술 스택
 
@@ -18,19 +21,21 @@
 - Vercel Serverless Functions (`/api/*`) + Upstash Redis (`@upstash/redis`)
 - 환경 변수가 없으면 자동으로 브라우저 `localStorage` 저장소로 동작
 - 앱을 다시 열면 이 기기에 저장해 둔 지난번 서버 데이터(`localStorage` 의 `mahjong.remoteSnapshot`)를 먼저 보여 주고, 서버의 최신 데이터를 받는 대로 바꿔 끼움
-- 단위 테스트: Vitest (`src/lib/scoring.ts`, `src/lib/stats.ts`, 저장소, API 핸들러)
+- 단위 테스트: Vitest (`src/lib/scoring.ts`, `src/lib/stats.ts`, `src/lib/sponsors.ts`, 저장소, API 핸들러)
 
 ## 폴더 구조
 
 ```
 api/
-  bootstrap.ts            # GET /api/bootstrap — 앱을 열 때 멤버·대국을 한 번에 (클라이언트가 저장소를 고를 때도 사용)
+  bootstrap.ts            # GET /api/bootstrap — 앱을 열 때 멤버·대국·후원을 한 번에 (클라이언트가 저장소를 고를 때도 사용)
   health.ts               # Redis 설정 여부 확인 (배포 후 점검용)
   members/index.ts        # GET, POST /api/members
   members/[id].ts         # PUT /api/members/:id
   games/index.ts          # GET, POST /api/games
   games/[id].ts           # DELETE /api/games/:id
-  _lib/                   # Redis 저장소, 공통 HTTP 처리, 핸들러 본문, 초기 멤버 시드 원본, 예전 기록 형식 변환
+  sponsors/index.ts       # GET, POST /api/sponsors
+  sponsors/[id].ts        # PUT, DELETE /api/sponsors/:id
+  _lib/                   # Redis 저장소, 공통 HTTP 처리, 핸들러 본문, 초기 멤버 시드 원본, 예전 기록 형식 변환, 후원 입력 검증
   package.json / tsconfig.json  # 서버리스 함수는 CommonJS 로 컴파일 (확장자 없는 import 호환)
 src/
   config/rules.ts         # 정산 규칙 (시작점·반환점·우마·동풍전 배율)
@@ -40,10 +45,11 @@ src/
   config/seedMembers.ts   # 초기 멤버 (api/_lib/seedMembers.ts 재수출)
   lib/scoring.ts          # 순위·우마·정산 점수 계산 (순수 함수)
   lib/stats.ts            # 월별 통계·랭킹 계산 (순수 함수)
+  lib/sponsors.ts         # 후원 상태별 정리·최근 달성 고르기 (순수 함수)
   lib/storage/            # StorageAdapter 인터페이스 + RemoteStorage / LocalStorage 구현
-  state/                  # DataProvider (멤버·대국 상태), useMe (이 기기의 "나")
+  state/                  # DataProvider (멤버·대국·후원 상태), useMe (이 기기의 "나")
   components/             # 공용 UI (버튼, 카드, 아바타, 순위 배지, 통계 카드, 하단 내비 등)
-  pages/                  # 홈 / 대국 기록 / 기록 목록·상세 / 랭킹·명예의 전당·월별 현황 / 내 기록 / 멤버
+  pages/                  # 홈 / 대국 기록 / 기록 목록·상세 / 랭킹·명예의 전당·월별 현황 / 내 기록 / 멤버 / 후원
 public/images/            # 마스코트·아바타 이미지 (직접 추가)
 ```
 
@@ -86,12 +92,13 @@ npm run build        # 타입 검사 + 프로덕션 빌드
 
 초기 멤버는 `api/_lib/seedMembers.ts` 에서 바꿉니다. 예전 초기 멤버(연경·민수·지수·현우)가 손대지 않은 채 남아 있고 대국 기록이 없으면 첫 접속 때 자동으로 새 초기 멤버로 교체됩니다.
 
-Redis 에는 다음 두 키만 사용합니다.
+Redis 에는 다음 세 키만 사용합니다.
 
 | 키 | 형식 |
 | --- | --- |
 | `mahjong:members` | 멤버 JSON 배열 |
 | `mahjong:games` | 대국 ID → 대국 JSON 해시 |
+| `mahjong:sponsors` | 후원 ID → 후원 JSON 해시 (제목·조건·상품·후원자·상태·달성자·달성일·지급일) |
 
 ## 이미지 넣는 위치
 

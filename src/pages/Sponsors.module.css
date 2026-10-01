@@ -1,0 +1,334 @@
+/* ---- 공용: 상태 칩 ---- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+
+/* 진행 중·지급 대기: 옅은 금색 */
+.chipOpen,
+.chipWaiting {
+  background: #fbf3df;
+  color: #8a6a1c;
+}
+
+.chipAchieved {
+  background: var(--up-soft);
+  color: var(--up);
+}
+
+.chipPaid {
+  background: var(--ivory-dark);
+  color: var(--text-muted);
+}
+
+/* ---- 홈: 후원 현황 카드 (카드 전체가 /sponsors 링크) ---- */
+.homeCard {
+  display: block;
+  color: inherit;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.homeCard:active {
+  transform: scale(0.99);
+}
+
+@media (hover: hover) {
+  .homeCard:hover {
+    box-shadow: 0 4px 16px rgba(32, 48, 57, 0.1), 0 1px 2px rgba(32, 48, 57, 0.04);
+  }
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: #7a5a12;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.homeEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: -2px;
+}
+
+.homeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.homeItem {
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.homeItem:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.homeItem:last-child {
+  padding-bottom: 0;
+}
+
+.homeItemHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.homeItemTitle {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 14.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.homeItemMeta {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.homeMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.recent {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--ivory);
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.recentIcon {
+  flex: 0 0 auto;
+  color: var(--gold);
+}
+
+.recentText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+/* 줄이 모자라면 제목(긴 쪽)부터 줄어들고, 이름은 길 때만 말줄임 */
+.recentTitle,
+.recentName {
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recentTitle {
+  min-width: 2.5em;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.recentName {
+  min-width: 2em;
+  max-width: 6em;
+}
+
+.recentDate {
+  flex: 0 0 auto;
+}
+
+.recentName::before,
+.recentDate::before {
+  content: '·';
+  margin: 0 3px;
+}
+
+/* 아이보리 줄 위에서는 배지를 흰 바탕으로 */
+.recent .chip {
+  background: var(--white);
+}
+
+/* ---- 후원 화면 (/sponsors) ---- */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.groupHead b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.12s ease;
+}
+
+.row:active {
+  transform: scale(0.99);
+}
+
+.rowHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.rowTitle {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.rowCondition {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.rowMeta {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.rowMeta svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--gold);
+}
+
+.rowMetaMuted {
+  color: var(--text-muted);
+}
+
+.rowAchieved {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.rowAchieved svg {
+  flex: 0 0 auto;
+  color: var(--gold);
+}
+
+.rowAchieved b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ---- 후원 추가·수정 ---- */
+/* 모달 본문은 흐린 글자색이라, 입력한 값이 placeholder 처럼 보이지 않게 진하게 */
+.form {
+  color: var(--text);
+}
+
+.selectEmpty {
+  color: var(--text-faint);
+}
+
+.statusBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--ivory);
+}
+
+.statusFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.dateInput {
+  min-width: 0;
+}
+
+.deleteLink {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.deleteLink:active {
+  background: var(--red-soft);
+}

@@ -1,10 +1,11 @@
 import { Coins, Dices, Flame, Sparkles, TrendingUp } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Delta } from '../components/Delta';
 import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
-import { StatCard, StatGrid } from '../components/StatCard';
+import { StatCard, StatGrid, type StatVariant } from '../components/StatCard';
 import { GAME_TYPE_LABEL } from '../config/rules';
 import { formatAvgRank, formatDateShort, formatWeekday } from '../lib/format';
 import { computeResults, formatPoints } from '../lib/scoring';
@@ -30,12 +31,41 @@ function NameStat({ top }: { top: TopMember | null }) {
   return <span className={[ui.statValueText, ui.statValueTie].join(' ')}>{names.join(' · ')}</span>;
 }
 
-/** 대국 수 · 최다 참여 · 누적 우마 1위 · 평균 우마 1위 (2×2) */
-export function MonthStatGrid({ summary, gamesLabel }: { summary: GroupSummary; gamesLabel: string }) {
+/**
+ * compact 칸의 이름 값: 이름 옆에 수치를 붙입니다 (예: 오영식 4국). 긴 이름은 말줄임.
+ * 두 명이 동률이면 한 줄에 한 명씩 두 줄로, 셋 이상이면 'OOO 외 N명' (그 달 참여자 전원이면 '전원').
+ */
+function CompactNameStat({ top, extra }: { top: TopMember | null; extra: (value: number) => ReactNode }) {
+  const memberMap = useMemberMap();
+  if (!top) return <>-</>;
+  const names = top.memberIds.map((id) => memberMap.get(id)?.name ?? '?');
+  const lines = names.length <= 2 ? names : [names.length === top.candidates ? '전원' : `${names[0]} 외 ${names.length - 1}명`];
   return (
-    <StatGrid>
+    <span className={lines.length > 1 ? ui.statCompactTie : undefined} title={names.length > 1 ? names.join(', ') : undefined}>
+      {lines.map((line, i) => (
+        <span key={i} className={ui.statCompactName}>
+          <span className={ui.statCompactNames}>{line}</span>
+          {i === lines.length - 1 && <span className={ui.statCompactExtra}>{extra(top.value)}</span>}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * 대국 수 · 최다 참여 · 누적 우마 1위 · 평균 우마 1위 (2×2).
+ * - default: 카드 4장 (월별 현황)
+ * - compact: 카드 한 장에 담은 작은 형태 (홈). 이름 옆에 수치를 붙이고, '아직 없음'·'지난달 기록 없음' 같은 보조 문구는 뺍니다.
+ *   to 를 주면 카드 전체가 링크가 됩니다.
+ */
+export function MonthStatGrid({ summary, gamesLabel, variant = 'default', to }: { summary: GroupSummary; gamesLabel: string; variant?: StatVariant; to?: string }) {
+  const compact = variant === 'compact';
+  const iconSize = compact ? 15 : 18;
+  return (
+    <StatGrid variant={variant} to={to}>
       <StatCard
-        icon={<Dices size={18} color="#075844" />}
+        variant={variant}
+        icon={<Dices size={iconSize} color="#075844" />}
         tone="#e4efe9"
         label={gamesLabel}
         value={
@@ -44,28 +74,31 @@ export function MonthStatGrid({ summary, gamesLabel }: { summary: GroupSummary; 
             <small>국</small>
           </>
         }
-        sub={<Delta delta={summary.games.delta} digits={0} />}
+        sub={compact && summary.games.delta === null ? undefined : <Delta delta={summary.games.delta} digits={0} />}
       />
       <StatCard
-        icon={<Flame size={18} color="#075844" />}
+        variant={variant}
+        icon={<Flame size={iconSize} color="#075844" />}
         tone="#e4efe9"
         label="최다 참여"
-        value={<NameStat top={summary.mostActive} />}
-        sub={summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
+        value={compact ? <CompactNameStat top={summary.mostActive} extra={(v) => `${v}국`} /> : <NameStat top={summary.mostActive} />}
+        sub={compact ? undefined : summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
       />
       <StatCard
-        icon={<Coins size={18} color="#075844" />}
+        variant={variant}
+        icon={<Coins size={iconSize} color="#075844" />}
         tone="#e4efe9"
         label="누적 우마 1위"
-        value={<NameStat top={summary.bestTotal} />}
-        sub={summary.bestTotal ? `누적 ${formatPoints(summary.bestTotal.value)}` : '아직 없음'}
+        value={compact ? <CompactNameStat top={summary.bestTotal} extra={(v) => <Points value={v} />} /> : <NameStat top={summary.bestTotal} />}
+        sub={compact ? undefined : summary.bestTotal ? `누적 ${formatPoints(summary.bestTotal.value)}` : '아직 없음'}
       />
       <StatCard
-        icon={<TrendingUp size={18} color="#075844" />}
+        variant={variant}
+        icon={<TrendingUp size={iconSize} color="#075844" />}
         tone="#e4efe9"
         label="평균 우마 1위"
-        value={<NameStat top={summary.bestAverage} />}
-        sub={summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
+        value={compact ? <CompactNameStat top={summary.bestAverage} extra={(v) => <Points value={v} />} /> : <NameStat top={summary.bestAverage} />}
+        sub={compact ? undefined : summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}
       />
     </StatGrid>
   );

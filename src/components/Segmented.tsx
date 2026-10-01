@@ -10,14 +10,17 @@ export function Segmented<T extends string>({
   options,
   onChange,
   ariaLabel,
+  full = false,
 }: {
   value: T;
   options: Option<T>[];
   onChange: (v: T) => void;
   ariaLabel?: string;
+  /** 줄 너비를 꽉 채우고 칸을 똑같이 나눕니다 */
+  full?: boolean;
 }) {
   return (
-    <div className={s.seg} role="tablist" aria-label={ariaLabel}>
+    <div className={[s.seg, full ? s.segFull : ''].join(' ')} role="tablist" aria-label={ariaLabel}>
       {options.map((o) => (
         <button
           key={o.value}

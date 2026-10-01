@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RULES } from '../../src/config/rules';
-import { bootstrapHandler, gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler } from './handlers';
+import { bootstrapHandler, gameByIdHandler, gamesHandler, memberByIdHandler, membersHandler, sponsorByIdHandler, sponsorsHandler } from './handlers';
 import { MemoryStore } from './store';
 
 function mockReq(method: string, opts: { body?: unknown; query?: Record<string, string> } = {}) {
@@ -63,9 +63,10 @@ describe('API 핸들러', () => {
     await bootstrapHandler(() => store)(mockReq('GET'), r.res);
     expect(r.out.status).toBe(200);
     expect(r.out.headers['Cache-Control']).toBe('no-store');
-    const body = r.out.body as { members: { id: string }[]; games: { playedAt: string }[] };
+    const body = r.out.body as { members: { id: string }[]; games: { playedAt: string }[]; sponsors: unknown[] };
     expect(body.members.map((m) => m.id)).toEqual(['yeonkyung', 'youngsik', 'sowon', 'chanyoung']);
     expect(body.games.map((g) => g.playedAt)).toEqual(['2025-03-09T10:30:00.000Z', '2025-03-08T10:30:00.000Z']);
+    expect(body.sponsors).toEqual([]);
 
     r = mockRes();
     await bootstrapHandler(() => store)(mockReq('POST'), r.res);
@@ -172,6 +173,88 @@ describe('API 핸들러', () => {
 
     r = mockRes();
     await games(mockReq('PUT'), r.res);
+    expect(r.out.status).toBe(405);
+  });
+
+  it('후원: 추가·목록·상태 변경·삭제', async () => {
+    const store = new MemoryStore();
+    const list = sponsorsHandler(() => store);
+    const byId = sponsorByIdHandler(() => store);
+
+    let r = mockRes();
+    await list(mockReq('POST', { body: { title: ' 1호 역만 ', condition: '카조에 제외', prize: '메가커피 기프티콘', sponsorId: 'youngsik', sponsorName: '' } }), r.res);
+    expect(r.out.status).toBe(201);
+    const created = r.out.body as { id: string; title: string; sponsorName: string; status: string; achieverId: null; createdAt: string };
+    expect(created).toMatchObject({ title: '1호 역만', sponsorName: '영식', status: 'open', achieverId: null });
+    expect(created.id).toMatch(/^s-/);
+    expect(store.sponsors.size).toBe(1);
+
+    // 멤버가 아닌 후원자는 이름을 직접
+    r = mockRes();
+    await list(mockReq('POST', { body: { title: '더블역만', prize: '당일 대탁비', sponsorId: null, sponsorName: '사장님' } }), r.res);
+    expect(r.out.status).toBe(201);
+    expect(r.out.body).toMatchObject({ sponsorId: null, sponsorName: '사장님', condition: '' });
+
+    // 검증
+    for (const body of [
+      { title: '', prize: 'x', sponsorName: 'a' },
+      { title: 'x', prize: '', sponsorName: 'a' },
+      { title: 'x', prize: 'x', sponsorName: '' },
+      { title: 'x', prize: 'x', sponsorId: 'ghost', sponsorName: 'a' },
+      { title: 'x', prize: 'x', sponsorName: 'a', status: 'weird' },
+      { title: 'x', prize: 'x', sponsorName: 'a', status: 'achieved' },
+      { title: 'x', prize: 'x', sponsorName: 'a', status: 'achieved', achieverId: 'ghost' },
+      { title: 'x', prize: 'x', sponsorName: 'a', status: 'achieved', achieverId: 'sowon', achievedAt: 'nope' },
+    ]) {
+      r = mockRes();
+      await list(mockReq('POST', { body }), r.res);
+      expect(r.out.status).toBe(400);
+    }
+
+    // 달성 처리 → 지급 완료 → 다시 진행 중
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { status: 'achieved', achieverId: 'sowon', achievedAt: '2025-03-08T03:00:00.000Z' } }), r.res);
+    expect(r.out.status).toBe(200);
+    expect(r.out.body).toMatchObject({ title: '1호 역만', status: 'achieved', achieverId: 'sowon', achievedAt: '2025-03-08T03:00:00.000Z', paidAt: null, createdAt: created.createdAt });
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { status: 'paid' } }), r.res);
+    expect(r.out.status).toBe(200);
+    const paid = r.out.body as { status: string; achieverId: string; paidAt: string | null };
+    expect(paid).toMatchObject({ status: 'paid', achieverId: 'sowon' });
+    expect(paid.paidAt).not.toBeNull();
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { status: 'open' } }), r.res);
+    expect(r.out.body).toMatchObject({ status: 'open', achieverId: null, achievedAt: null, paidAt: null });
+
+    // 진행 중인 후원을 달성자 없이 지급 완료로 바꿀 수 없다
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { status: 'paid' } }), r.res);
+    expect(r.out.status).toBe(400);
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: 'nope' }, body: { title: 'x' } }), r.res);
+    expect(r.out.status).toBe(404);
+
+    r = mockRes();
+    await list(mockReq('GET'), r.res);
+    expect((r.out.body as { title: string }[]).length).toBe(2);
+
+    r = mockRes();
+    await bootstrapHandler(() => store)(mockReq('GET'), r.res);
+    expect((r.out.body as { sponsors: unknown[] }).sponsors.length).toBe(2);
+
+    r = mockRes();
+    await byId(mockReq('DELETE', { query: { id: created.id } }), r.res);
+    expect(r.out.status).toBe(200);
+    r = mockRes();
+    await byId(mockReq('DELETE', { query: { id: created.id } }), r.res);
+    expect(r.out.status).toBe(404);
+    expect(store.sponsors.size).toBe(1);
+
+    r = mockRes();
+    await byId(mockReq('POST', { query: { id: 'x' } }), r.res);
     expect(r.out.status).toBe(405);
   });
 });
