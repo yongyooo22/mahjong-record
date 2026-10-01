@@ -131,34 +131,51 @@ function MemberSelect({
   );
 }
 
-/** 후원 한 건 (누르면 수정) */
-function SponsorRow({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: () => void }) {
+/** 카드 아래 바로가기: 진행 중 → 달성 처리, 달성(지급 대기) → 지급 완료 처리 */
+const QUICK_ACTION: Partial<Record<SponsorStatus, { next: SponsorStatus; label: string }>> = {
+  open: { next: 'achieved', label: '달성 처리' },
+  achieved: { next: 'paid', label: '지급 완료 처리' },
+};
+
+/** 후원 한 건. 카드를 누르면 수정, 아래 버튼은 다음 상태가 미리 골라진 수정 창 */
+function SponsorRow({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: (status?: SponsorStatus) => void }) {
   const memberMap = useMemberMap();
+  const quick = QUICK_ACTION[sponsor.status];
   return (
-    <button type="button" className={s.row} onClick={onOpen}>
-      <span className={s.rowHead}>
-        <span className={s.rowTitle}>{sponsor.title}</span>
-        <SponsorStatusChip status={sponsor.status} />
-      </span>
-      {sponsor.condition && <span className={s.rowCondition}>{sponsor.condition}</span>}
-      <span className={s.rowMeta}>
-        <Gift size={14} aria-hidden="true" />
-        <span>
-          {sponsor.prize} <span className={s.rowMetaMuted}>· 후원 {sponsorDisplayName(sponsor, memberMap)}</span>
+    <div className={s.row}>
+      <button type="button" className={s.rowMain} onClick={() => onOpen()}>
+        <span className={s.rowHead}>
+          <span className={s.rowTitle}>{sponsor.title}</span>
+          <SponsorStatusChip status={sponsor.status} />
         </span>
-      </span>
-      {sponsor.status !== 'open' && (
-        <span className={s.rowAchieved}>
-          <PartyPopper size={14} aria-hidden="true" />
+        {sponsor.condition && <span className={s.rowCondition}>{sponsor.condition}</span>}
+        <span className={s.rowMeta}>
+          <Gift size={14} aria-hidden="true" />
           <span>
-            <b>{memberMap.get(sponsor.achieverId ?? '')?.name ?? '?'}</b>
-            {sponsor.achievedAt && ` · ${formatDateShortYear(sponsor.achievedAt)} 달성`}
-            {sponsor.status === 'paid' && sponsor.paidAt && ` · ${formatDateShortYear(sponsor.paidAt)} 지급`}
+            {sponsor.prize} <span className={s.rowMetaMuted}>· 후원 {sponsorDisplayName(sponsor, memberMap)}</span>
           </span>
-          {sponsor.status === 'achieved' && <PayoutChip status={sponsor.status} />}
         </span>
+        {sponsor.status !== 'open' && (
+          <span className={s.rowAchieved}>
+            <PartyPopper size={14} aria-hidden="true" />
+            <span>
+              <b>{memberMap.get(sponsor.achieverId ?? '')?.name ?? '?'}</b>
+              {sponsor.achievedAt && ` · ${formatDateShortYear(sponsor.achievedAt)} 달성`}
+              {sponsor.status === 'paid' && sponsor.paidAt && ` · ${formatDateShortYear(sponsor.paidAt)} 지급`}
+            </span>
+            {sponsor.status === 'achieved' && <PayoutChip status={sponsor.status} />}
+          </span>
+        )}
+      </button>
+      {quick && (
+        <div className={s.rowActions}>
+          <button type="button" className={s.rowAction} onClick={() => onOpen(quick.next)}>
+            <PartyPopper size={14} aria-hidden="true" />
+            {quick.label}
+          </button>
+        </div>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -186,10 +203,12 @@ export function SponsorsPage() {
   // 이 기기에 저장해 둔 데이터를 보여 주는 중이면 서버 데이터가 올 때까지 "후원 없음" 대신 로딩 표시
   const loading = status === 'loading' || (syncing && sponsors.length === 0);
 
-  const openEditor = (target: Sponsor | 'new') => {
+  /** status 를 주면 그 상태가 미리 골라진 채로 엽니다 (달성 처리·지급 완료 처리) */
+  const openEditor = (target: Sponsor | 'new', status?: SponsorStatus) => {
     setEditing(target);
     setFormError(null);
-    setForm(initialForm(target, memberMap));
+    const form = initialForm(target, memberMap);
+    setForm(status ? { ...form, status } : form);
   };
 
   const close = () => !saving && setEditing(null);
@@ -300,7 +319,7 @@ export function SponsorsPage() {
                   {label} <b>{groups[key].length}</b>
                 </h2>
                 {groups[key].map((sp) => (
-                  <SponsorRow key={sp.id} sponsor={sp} onOpen={() => openEditor(sp)} />
+                  <SponsorRow key={sp.id} sponsor={sp} onOpen={(next) => openEditor(sp, next)} />
                 ))}
               </section>
             ),

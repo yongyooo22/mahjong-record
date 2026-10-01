@@ -207,18 +207,46 @@
 }
 
 .row {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.rowMain {
   display: block;
   width: 100%;
   text-align: left;
   padding: 12px 14px;
-  background: var(--white);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  transition: transform 0.12s ease;
+  transition: background 0.12s ease;
 }
 
-.row:active {
-  transform: scale(0.99);
+.rowMain:active {
+  background: #fdfbf6;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 14px 12px;
+}
+
+.rowAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #ecd9a8;
+  background: #fbf3df;
+  color: #7a5a12;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rowAction:active {
+  background: var(--gold-soft);
 }
 
 .rowHead {
