@@ -287,7 +287,7 @@ export function SponsorsPage() {
             <EmptyState
               icon={<Gift size={24} />}
               title="아직 등록된 후원이 없어요"
-              description="‘후원 추가’로 조건과 상품을 걸어 보세요. 진행 중인 후원은 홈에서도 보여요."
+              description="‘후원 추가’로 조건과 상품을 걸어 보세요."
             />
           </Card>
         )}
