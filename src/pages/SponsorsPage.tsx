@@ -152,7 +152,7 @@ function SponsorRow({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: (status?: S
         <span className={s.rowMeta}>
           <Gift size={14} aria-hidden="true" />
           <span>
-            {sponsor.prize} <span className={s.rowMetaMuted}>· 후원 {sponsorDisplayName(sponsor, memberMap)}</span>
+            {sponsor.prize} <span className={s.rowMetaMuted}>· 후원자 {sponsorDisplayName(sponsor, memberMap)}</span>
           </span>
         </span>
         {sponsor.status !== 'open' && (
