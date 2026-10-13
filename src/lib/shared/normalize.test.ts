@@ -37,6 +37,14 @@ describe('대국 레코드 정규화', () => {
     expect(g.yakumans).toEqual([{ playerId: 'a', name: '국사무쌍' }]);
   });
 
+  it('규칙이 없거나 깨진 기록은 기본 규칙으로 계산한다', () => {
+    const { rules: _r, ...noRules } = base;
+    void _r;
+    expect(normalizeGame(noRules as Game).rules).toEqual(DEFAULT_RULES);
+    expect(normalizeGame({ ...base, rules: { startPoints: 25000 } as unknown as Game['rules'] }).rules).toEqual(DEFAULT_RULES);
+    expect(normalizeGame({ ...base, rules: { ...DEFAULT_RULES, uma: [10, 5] } as unknown as Game['rules'] }).rules).toEqual(DEFAULT_RULES);
+  });
+
   it('동풍전 우마 배율이 1이던 시절의 기록은 현재 기본 배율로, 반장전은 그대로', () => {
     const rules = { ...DEFAULT_RULES, tonpuuUmaMultiplier: 1 };
     expect(normalizeGame({ ...base, gameType: 'tonpuu', rules }).rules.tonpuuUmaMultiplier).toBe(DEFAULT_RULES.tonpuuUmaMultiplier);

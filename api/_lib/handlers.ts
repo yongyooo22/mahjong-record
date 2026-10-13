@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { DEFAULT_RULES } from '../../src/config/rules';
 import type { Game, Member, NewSponsor, Sponsor, Yakuman } from '../../src/lib/types';
 import { normalizeGame } from '../../src/lib/shared/normalize';
 import { generateId, HttpError, methodNotAllowed, paramString, parseBody, withStore } from './http';
@@ -70,7 +71,8 @@ function validateGame(input: Record<string, unknown>, members: Member[]): Omit<G
       startPoints: Number(rules.startPoints),
       returnPoints: Number(rules.returnPoints),
       uma: uma as [number, number, number, number],
-      tonpuuUmaMultiplier: Number.isFinite(Number(rules.tonpuuUmaMultiplier)) ? Number(rules.tonpuuUmaMultiplier) : 1,
+      // 배율이 빠져 있으면 현재 기본 규칙을 따릅니다 (1 은 예전 기록으로 취급되어 읽을 때 바뀌므로 기본값으로 쓰지 않음)
+      tonpuuUmaMultiplier: Number.isFinite(Number(rules.tonpuuUmaMultiplier)) ? Number(rules.tonpuuUmaMultiplier) : DEFAULT_RULES.tonpuuUmaMultiplier,
     },
   };
 }

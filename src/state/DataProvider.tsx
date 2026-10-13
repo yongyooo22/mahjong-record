@@ -45,6 +45,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // 서버에 성공한 쓰기 횟수. 스냅샷을 보여 주며 최신 데이터를 받는 동안 쓰기가 끝났다면,
+  // 그보다 먼저 출발한 응답에는 그 변경이 없으므로 그 응답으로 덮어쓰지 않고 다시 받습니다.
+  const writesRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,9 +65,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } else {
       setStatus('loading');
     }
+    // 응답을 기다리는 동안 저장·삭제가 끝났으면 그 응답에는 그 변경이 없으므로 다시 받습니다 (최대 3번 시도)
+    const openLatest = async () => {
+      for (let i = 0; ; i += 1) {
+        const writesBefore = writesRef.current;
+        const opened = await openStorage();
+        if (cancelled || writesRef.current === writesBefore || i >= 2) return opened;
+      }
+    };
     (async () => {
       try {
-        const { storage, members: m, games: g, sponsors: sp } = await openStorage();
+        const { storage, members: m, games: g, sponsors: sp } = await openLatest();
         if (cancelled) return;
         storageRef.current = storage;
         setStorageKind(storage.kind);
@@ -104,43 +115,54 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return s;
   };
 
+  const written = () => {
+    writesRef.current += 1;
+  };
+
   const addGame = useCallback(async (input: NewGame) => {
     const game = await storage().addGame(input);
+    written();
     setGames((prev) => [...prev, game]);
     return game;
   }, []);
 
   const deleteGame = useCallback(async (id: string) => {
     await storage().deleteGame(id);
+    written();
     setGames((prev) => prev.filter((g) => g.id !== id));
   }, []);
 
   const addMember = useCallback(async (input: NewMember) => {
     const member = await storage().addMember(input);
+    written();
     setMembers((prev) => [...prev, member]);
     return member;
   }, []);
 
   const updateMember = useCallback(async (id: string, patch: MemberPatch) => {
     const member = await storage().updateMember(id, patch);
+    written();
     setMembers((prev) => prev.map((m) => (m.id === id ? member : m)));
     return member;
   }, []);
 
   const addSponsor = useCallback(async (input: NewSponsor) => {
     const sponsor = await storage().addSponsor(input);
+    written();
     setSponsors((prev) => [sponsor, ...prev]);
     return sponsor;
   }, []);
 
   const updateSponsor = useCallback(async (id: string, patch: SponsorPatch) => {
     const sponsor = await storage().updateSponsor(id, patch);
+    written();
     setSponsors((prev) => prev.map((s) => (s.id === id ? sponsor : s)));
     return sponsor;
   }, []);
 
   const deleteSponsor = useCallback(async (id: string) => {
     await storage().deleteSponsor(id);
+    written();
     setSponsors((prev) => prev.filter((s) => s.id !== id));
   }, []);
 

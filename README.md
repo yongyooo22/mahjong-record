@@ -130,7 +130,7 @@ export const DEFAULT_RULES: ScoringRules = {
   startPoints: 25000,        // 시작 점수
   returnPoints: 25000,       // 반환 점수 (오카를 쓰려면 30000 등으로)
   uma: [15, 5, -5, -15],     // 1위 → 4위 우마
-  tonpuuUmaMultiplier: 1,    // 동풍전 우마 배율
+  tonpuuUmaMultiplier: 0.5,  // 동풍전 우마 배율 (반장전의 절반)
 };
 ```
 
@@ -138,6 +138,7 @@ export const DEFAULT_RULES: ScoringRules = {
 예) 38,200 / 27,600 / 21,400 / 12,800 → +28.2 / +7.6 / −8.6 / −27.2 (합계 0)
 
 대국 기록에는 저장 당시의 규칙이 함께 저장되므로 규칙을 바꿔도 과거 기록의 정산 결과는 그대로 유지됩니다.
+예외는 하나로, 동풍전 우마 배율이 1(반장전과 동일)이던 초기 버전의 동풍전 기록은 읽을 때 현재 배율로 다시 계산합니다 (`src/lib/shared/normalize.ts`). 규칙이 빠졌거나 깨진 기록도 현재 기본 규칙으로 계산합니다.
 
 ## 이번 단계에서 제외한 것
 

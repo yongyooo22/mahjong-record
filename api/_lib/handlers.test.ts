@@ -176,6 +176,16 @@ describe('API 핸들러', () => {
     expect(r.out.status).toBe(405);
   });
 
+  it('POST /api/games: 동풍전 배율이 빠진 규칙은 현재 기본 배율로 저장한다', async () => {
+    const store = new MemoryStore();
+    const { tonpuuUmaMultiplier: _m, ...rulesWithout } = DEFAULT_RULES;
+    void _m;
+    const { res, out } = mockRes();
+    await gamesHandler(() => store)(mockReq('POST', { body: { ...validGame, gameType: 'tonpuu', rules: rulesWithout } }), res);
+    expect(out.status).toBe(201);
+    expect((out.body as { rules: { tonpuuUmaMultiplier: number } }).rules.tonpuuUmaMultiplier).toBe(DEFAULT_RULES.tonpuuUmaMultiplier);
+  });
+
   it('후원: 추가·목록·상태 변경·삭제', async () => {
     const store = new MemoryStore();
     const list = sponsorsHandler(() => store);

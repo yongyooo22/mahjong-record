@@ -813,3 +813,24 @@
   font-size: 14px;
   font-weight: 700;
 }
+
+/* ErrorBoundary: 앱 전체가 깨졌을 때의 안내 화면 */
+.boundary {
+  max-width: var(--app-max);
+  margin: 0 auto;
+  padding: calc(24px + var(--safe-top)) 16px 24px;
+}
+
+.boundaryDetail {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+.boundaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
