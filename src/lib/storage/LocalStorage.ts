@@ -1,6 +1,6 @@
-import { normalizeGame } from '../../../api/_lib/normalize';
-import { buildSponsorFields, normalizeSponsor, SponsorInputError } from '../../../api/_lib/sponsors';
-import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../../config/seedMembers';
+import { normalizeGame } from '../shared/normalize';
+import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../shared/seedMembers';
+import { buildSponsorFields, normalizeSponsor, SponsorInputError } from '../shared/sponsors';
 import type { Game, Member, MemberPatch, NewGame, NewMember, NewSponsor, Sponsor, SponsorPatch } from '../types';
 import { generateId } from './ids';
 import { StorageError, type StorageAdapter } from './StorageAdapter';

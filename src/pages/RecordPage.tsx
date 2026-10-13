@@ -24,6 +24,8 @@ import app from '../styles/App.module.css';
 import s from './Record.module.css';
 
 const PLAYER_COUNT = 4;
+/** 저장할 정산 규칙 (기록 당시 규칙을 대국에 함께 저장) */
+const rules = DEFAULT_RULES;
 /** 장소 선택에서 "새 장소 추가" 를 뜻하는 특수 값 */
 const NEW_PLACE = '__new__';
 
@@ -125,21 +127,18 @@ export function RecordPage() {
   const removeYakuman = (i: number) => setYakumans((prev) => prev.filter((_, idx) => idx !== i));
   const yakumanIncomplete = yakumans.some((y) => !selectedIds.includes(y.playerId) || !yakumanName(y));
 
-  const rules = DEFAULT_RULES;
-  const scores = slots.map((p) => parseScore(p.score));
-  const allScored = scores.every((v) => v !== null);
+  const scores = useMemo(() => slots.map((p) => parseScore(p.score)), [slots]);
+  // 모두 입력됐을 때만 숫자 배열 (scores 와 같은 참조라 아래 useMemo 의존성으로 쓰기 좋음)
+  const entered = useMemo(() => (scores.every((v) => v !== null) ? (scores as number[]) : null), [scores]);
+  const allScored = entered !== null;
   const allSelected = slots.every((p) => p.memberId !== '');
   const duplicate = new Set(slots.map((p) => p.memberId).filter(Boolean)).size !== slots.filter((p) => p.memberId).length;
   const notHundred = scores.map((v) => v !== null && v % 100 !== 0);
   const hasNotHundred = notHundred.some(Boolean);
 
-  const results = useMemo(() => {
-    if (!allScored) return null;
-    return computeResults(scores as number[], rules, gameType);
-  }, [allScored, scores.join(','), rules, gameType]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const ties = useMemo(() => (allScored ? tieGroups(scores as number[]) : []), [allScored, scores.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
-  const total = useMemo(() => (allScored ? scoreTotalDiff(scores as number[], rules, PLAYER_COUNT) : null), [allScored, scores.join(','), rules]); // eslint-disable-line react-hooks/exhaustive-deps
+  const results = useMemo(() => (entered ? computeResults(entered, rules, gameType) : null), [entered, gameType]);
+  const ties = useMemo(() => (entered ? tieGroups(entered) : []), [entered]);
+  const total = useMemo(() => (entered ? scoreTotalDiff(entered, rules, PLAYER_COUNT) : null), [entered]);
   const enteredSum = scores.reduce<number>((a, v) => a + (v ?? 0), 0);
 
   const canSave = status === 'ready' && allSelected && allScored && !duplicate && !hasNotHundred && !yakumanIncomplete && !saving;
@@ -168,7 +167,7 @@ export function RecordPage() {
       yakumans: yakumanList,
       rules: { ...rules, uma: [...rules.uma] as [number, number, number, number] },
     };
-  }, [date, time, place, gameType, slots, scores, yakumans, rules]);
+  }, [date, time, place, gameType, slots, scores, yakumans]);
 
   const doSave = async () => {
     const game = buildGame();
@@ -491,7 +490,7 @@ export function RecordPage() {
         onClose={() => setConfirmOpen(false)}
         title={
           <>
-            <AlertTriangle size={20} color="#C83D32" /> 점수 합계가 맞지 않아요
+            <AlertTriangle size={20} className="neg" /> 점수 합계가 맞지 않아요
           </>
         }
         actions={

@@ -20,13 +20,12 @@ export function Segmented<T extends string>({
   full?: boolean;
 }) {
   return (
-    <div className={[s.seg, full ? s.segFull : ''].join(' ')} role="tablist" aria-label={ariaLabel}>
+    <div className={[s.seg, full ? s.segFull : ''].join(' ')} role="group" aria-label={ariaLabel}>
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
-          role="tab"
-          aria-selected={o.value === value}
+          aria-pressed={o.value === value}
           className={[s.segBtn, o.value === value ? s.segBtnActive : ''].join(' ')}
           onClick={() => onChange(o.value)}
         >

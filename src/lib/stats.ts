@@ -17,6 +17,11 @@ export function previousMonthKey(key: string): string {
   return monthKey(d);
 }
 
+export function nextMonthKey(key: string): string {
+  const [y, m] = key.split('-').map(Number);
+  return monthKey(new Date(y, m, 1));
+}
+
 export function formatMonthKey(key: string): string {
   const [y, m] = key.split('-').map(Number);
   return `${y}년 ${m}월`;

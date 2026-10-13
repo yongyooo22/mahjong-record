@@ -65,8 +65,7 @@ export function MonthStatGrid({ summary, gamesLabel, variant = 'default', to }: 
     <StatGrid variant={variant} to={to}>
       <StatCard
         variant={variant}
-        icon={<Dices size={iconSize} color="#075844" />}
-        tone="#e4efe9"
+        icon={<Dices size={iconSize} />}
         label={gamesLabel}
         value={
           <>
@@ -78,24 +77,21 @@ export function MonthStatGrid({ summary, gamesLabel, variant = 'default', to }: 
       />
       <StatCard
         variant={variant}
-        icon={<Flame size={iconSize} color="#075844" />}
-        tone="#e4efe9"
+        icon={<Flame size={iconSize} />}
         label="최다 참여"
         value={compact ? <CompactNameStat top={summary.mostActive} extra={(v) => `${v}국`} /> : <NameStat top={summary.mostActive} />}
         sub={compact ? undefined : summary.mostActive ? `${summary.mostActive.value}국 참여` : '아직 없음'}
       />
       <StatCard
         variant={variant}
-        icon={<Coins size={iconSize} color="#075844" />}
-        tone="#e4efe9"
+        icon={<Coins size={iconSize} />}
         label="누적 우마 1위"
         value={compact ? <CompactNameStat top={summary.bestTotal} extra={(v) => <Points value={v} />} /> : <NameStat top={summary.bestTotal} />}
         sub={compact ? undefined : summary.bestTotal ? `누적 ${formatPoints(summary.bestTotal.value)}` : '아직 없음'}
       />
       <StatCard
         variant={variant}
-        icon={<TrendingUp size={iconSize} color="#075844" />}
-        tone="#e4efe9"
+        icon={<TrendingUp size={iconSize} />}
         label="평균 우마 1위"
         value={compact ? <CompactNameStat top={summary.bestAverage} extra={(v) => <Points value={v} />} /> : <NameStat top={summary.bestAverage} />}
         sub={compact ? undefined : summary.bestAverage ? `대국당 ${formatPoints(summary.bestAverage.value)}` : '아직 없음'}

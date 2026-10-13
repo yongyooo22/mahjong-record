@@ -26,11 +26,11 @@ function Cloud({ className }: { className: string }) {
     <svg className={className} viewBox="0 0 34 18" fill="none" aria-hidden="true">
       <path
         d="M3 15c-2.5 0-2.5-4 0-4 0-4 5-4 6-1 1-3 6-3 7 0 1-3 6-3 7 0 2-3 7-2 7 2 3 0 3 4 0 4H3Z"
-        stroke="#D9AD5B"
+        stroke="var(--gold)"
         strokeWidth="1.2"
         strokeLinejoin="round"
       />
-      <path d="M9 12c1-1 2-1 3 0M18 12c1-1 2-1 3 0" stroke="#D9AD5B" strokeWidth="1" strokeLinecap="round" />
+      <path d="M9 12c1-1 2-1 3 0M18 12c1-1 2-1 3 0" stroke="var(--gold)" strokeWidth="1" strokeLinecap="round" />
     </svg>
   );
 }

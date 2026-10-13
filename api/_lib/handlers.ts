@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { Game, Member, NewSponsor, Sponsor, Yakuman } from '../../src/lib/types';
-import { normalizeGame } from './normalize';
+import { normalizeGame } from '../../src/lib/shared/normalize';
 import { generateId, HttpError, methodNotAllowed, paramString, parseBody, withStore } from './http';
-import { buildSponsorFields, normalizeSponsor, SponsorInputError } from './sponsors';
+import { buildSponsorFields, normalizeSponsor, SponsorInputError } from '../../src/lib/shared/sponsors';
 import { loadMembers, type Store } from './store';
 
 const GAME_TYPES = new Set(['hanchan', 'tonpuu']);

@@ -1,12 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatMonthKey, previousMonthKey } from '../lib/stats';
+import { formatMonthKey, nextMonthKey, previousMonthKey } from '../lib/stats';
 import s from './ui.module.css';
-
-function nextMonthKey(key: string): string {
-  const [y, m] = key.split('-').map(Number);
-  const d = new Date(y, m, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
 
 export function MonthPicker({ value, onChange, max }: { value: string; onChange: (k: string) => void; max: string }) {
   return (

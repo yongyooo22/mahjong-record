@@ -1,6 +1,5 @@
 import { ChevronDown, Gift, PartyPopper, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
-import { SPONSOR_CONDITION_MAX, SPONSOR_NAME_MAX, SPONSOR_PRIZE_MAX, SPONSOR_TITLE_MAX } from '../../api/_lib/sponsors';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
@@ -11,6 +10,7 @@ import { Segmented } from '../components/Segmented';
 import { SkeletonRows } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { formatDateShortYear, fromDateTimeInputs, toDateInput } from '../lib/format';
+import { SPONSOR_CONDITION_MAX, SPONSOR_NAME_MAX, SPONSOR_PRIZE_MAX, SPONSOR_TITLE_MAX } from '../lib/shared/sponsors';
 import { groupSponsors, SPONSOR_STATUS_LABEL, sponsorDisplayName } from '../lib/sponsors';
 import type { Member, NewSponsor, Sponsor, SponsorAchievement, SponsorStatus } from '../lib/types';
 import { useData, useMemberMap } from '../state/DataProvider';

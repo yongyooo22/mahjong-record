@@ -13,6 +13,7 @@ import {
   gamesInMonth,
   isMonthKey,
   monthKey,
+  nextMonthKey,
   previousMonthKey,
   sortGamesDesc,
   yakumansOf,
@@ -49,6 +50,12 @@ describe('월 키', () => {
     expect(monthKey('2025-03-08T19:30:00')).toBe('2025-03');
     expect(previousMonthKey('2025-03')).toBe('2025-02');
     expect(previousMonthKey('2025-01')).toBe('2024-12');
+  });
+
+  it('이전 달·다음 달은 연도 경계를 넘는다', () => {
+    expect(previousMonthKey('2025-01')).toBe('2024-12');
+    expect(nextMonthKey('2024-12')).toBe('2025-01');
+    expect(nextMonthKey(previousMonthKey('2025-06'))).toBe('2025-06');
   });
 
   it('월별 필터와 월 목록', () => {

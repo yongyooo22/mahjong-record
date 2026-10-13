@@ -29,6 +29,17 @@
   margin-bottom: 2px;
 }
 
+/* 통계 카드 아이콘 색: 아이콘(lucide)은 currentColor 를 쓰므로 color 만 바꾸면 됩니다 */
+.toneGreen {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.toneGold {
+  background: var(--rank-gold-bg);
+  color: var(--gold-dark);
+}
+
 .statLabel {
   font-size: 12px;
   color: var(--text-muted);

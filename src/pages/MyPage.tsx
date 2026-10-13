@@ -131,8 +131,7 @@ export function MyPage() {
               ) : (
                 <StatGrid>
                   <StatCard
-                    icon={<Dices size={18} color="#075844" />}
-                    tone="#e4efe9"
+                    icon={<Dices size={18} />}
                     label="참여 횟수"
                     value={
                       <>
@@ -143,8 +142,8 @@ export function MyPage() {
                     sub={monthly ? <Delta delta={monthly.games.delta} digits={0} /> : '전체 기간'}
                   />
                   <StatCard
-                    icon={<Crown size={18} color="#b9861f" />}
-                    tone="#fbf0d0"
+                    icon={<Crown size={18} />}
+                    tone="gold"
                     label="1위 횟수"
                     value={
                       <>
@@ -155,15 +154,13 @@ export function MyPage() {
                     sub={monthly ? <Delta delta={monthly.firstCount.delta} digits={0} /> : `1위율 ${stats.firstRate}%`}
                   />
                   <StatCard
-                    icon={<Coins size={18} color="#075844" />}
-                    tone="#e4efe9"
+                    icon={<Coins size={18} />}
                     label="누적 우마"
                     value={<span className={stats.totalPoints > 0 ? 'pos' : stats.totalPoints < 0 ? 'neg' : ''}>{formatPoints(stats.totalPoints)}</span>}
                     sub={monthly ? <Delta delta={monthly.totalPoints.delta} digits={1} /> : '정산 점수 합계'}
                   />
                   <StatCard
-                    icon={<TrendingUp size={18} color="#075844" />}
-                    tone="#e4efe9"
+                    icon={<TrendingUp size={18} />}
                     label="평균 우마"
                     value={
                       stats.avgPoints === null ? (

@@ -12,6 +12,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["./**/*.ts", "../src/lib/types.ts", "../src/config/rules.ts"],
-  "exclude": ["./**/*.test.ts"]
+  "include": ["./**/*.ts", "../src/lib/types.ts", "../src/lib/shared/**/*.ts", "../src/config/rules.ts"],
+  "exclude": ["./**/*.test.ts", "../src/**/*.test.ts"]
 }

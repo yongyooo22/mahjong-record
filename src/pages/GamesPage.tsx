@@ -1,5 +1,5 @@
 import { FileText, MapPin, PenLine, Sparkles } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -71,14 +71,15 @@ export function GamesPage() {
   const [month, setMonth] = useState(currentMonthKey());
   const maxMonth = currentMonthKey();
 
-  // 이번 달 기록이 없고 다른 달 기록이 있으면 가장 최근 달로 이동
+  // 처음 데이터가 준비됐을 때 한 번만: 이번 달 기록이 없고 다른 달 기록이 있으면 가장 최근 달로 이동
+  const jumped = useRef(false);
   useEffect(() => {
-    if (status !== 'ready' || games.length === 0) return;
+    if (jumped.current || status !== 'ready' || games.length === 0) return;
+    jumped.current = true;
     if (gamesInMonth(games, month).length === 0) {
       setMonth(monthKey(sortGamesDesc(games)[0].playedAt));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, games, month]);
 
   const list = useMemo(() => sortGamesDesc(mode === 'month' ? gamesInMonth(games, month) : games), [games, mode, month]);
 

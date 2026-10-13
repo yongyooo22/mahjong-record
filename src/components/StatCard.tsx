@@ -9,6 +9,11 @@ import s from './ui.module.css';
  */
 export type StatVariant = 'default' | 'compact';
 
+/** 아이콘 배경·색 (CSS 변수로 정의, ui.module.css) */
+export type StatTone = 'green' | 'gold';
+
+const toneClass: Record<StatTone, string> = { green: s.toneGreen, gold: s.toneGold };
+
 /** 통계 카드 2×2 격자. compact 에서 to 를 주면 카드 전체가 그 화면으로 가는 링크가 됩니다. */
 export function StatGrid({ children, variant = 'default', to }: { children: ReactNode; variant?: StatVariant; to?: string }) {
   if (variant === 'default') return <div className={s.stats}>{children}</div>;
@@ -25,14 +30,14 @@ export function StatGrid({ children, variant = 'default', to }: { children: Reac
 /** 아이콘 + 라벨 + 값 + 보조 문구(증감 등) 로 이루어진 통계 카드 */
 export function StatCard({
   icon,
-  tone,
+  tone = 'green',
   label,
   value,
   sub,
   variant = 'default',
 }: {
   icon: ReactNode;
-  tone: string;
+  tone?: StatTone;
   label: string;
   value: ReactNode;
   sub?: ReactNode;
@@ -41,7 +46,7 @@ export function StatCard({
   if (variant === 'compact') {
     return (
       <div className={s.statCompact}>
-        <div className={s.statCompactIcon} style={{ background: tone }}>
+        <div className={[s.statCompactIcon, toneClass[tone]].join(' ')}>
           {icon}
         </div>
         <div className={s.statCompactBody}>
@@ -54,7 +59,7 @@ export function StatCard({
   }
   return (
     <div className={s.stat}>
-      <div className={s.statIcon} style={{ background: tone }}>
+      <div className={[s.statIcon, toneClass[tone]].join(' ')}>
         {icon}
       </div>
       <div className={s.statLabel}>{label}</div>

@@ -1,5 +1,5 @@
 import { Redis } from '@upstash/redis';
-import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from './seedMembers';
+import { isUntouchedLegacySeed, SEED_CREATED_AT, SEED_MEMBERS } from '../../src/lib/shared/seedMembers';
 import type { Game, Member, Sponsor } from '../../src/lib/types';
 
 export const MEMBERS_KEY = 'mahjong:members';

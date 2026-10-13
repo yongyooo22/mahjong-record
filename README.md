@@ -21,7 +21,7 @@
 - Vercel Serverless Functions (`/api/*`) + Upstash Redis (`@upstash/redis`)
 - 환경 변수가 없으면 자동으로 브라우저 `localStorage` 저장소로 동작
 - 앱을 다시 열면 이 기기에 저장해 둔 지난번 서버 데이터(`localStorage` 의 `mahjong.remoteSnapshot`)를 먼저 보여 주고, 서버의 최신 데이터를 받는 대로 바꿔 끼움
-- 단위 테스트: Vitest (`src/lib/scoring.ts`, `src/lib/stats.ts`, `src/lib/sponsors.ts`, 저장소, API 핸들러)
+- 단위 테스트: Vitest (`src/lib/scoring.ts`, `src/lib/stats.ts`, `src/lib/sponsors.ts`, `src/lib/format.ts`, `src/lib/shared/`, 장소 목록, 저장소, API 핸들러)
 
 ## 폴더 구조
 
@@ -35,17 +35,17 @@ api/
   games/[id].ts           # DELETE /api/games/:id
   sponsors/index.ts       # GET, POST /api/sponsors
   sponsors/[id].ts        # PUT, DELETE /api/sponsors/:id
-  _lib/                   # Redis 저장소, 공통 HTTP 처리, 핸들러 본문, 초기 멤버 시드 원본, 예전 기록 형식 변환, 후원 입력 검증
+  _lib/                   # Redis 저장소, 공통 HTTP 처리, 핸들러 본문 (검증·변환 로직은 src/lib/shared 를 가져다 씀)
   package.json / tsconfig.json  # 서버리스 함수는 CommonJS 로 컴파일 (확장자 없는 import 호환)
 src/
   config/rules.ts         # 정산 규칙 (시작점·반환점·우마·동풍전 배율)
   config/places.ts        # 대국 장소 기본 목록 + 이 기기에서 추가한 장소
   config/yakuman.ts       # 역만 이름 목록
   config/images.ts        # 마스코트·아바타 이미지 경로 규칙
-  config/seedMembers.ts   # 초기 멤버 (api/_lib/seedMembers.ts 재수출)
   lib/scoring.ts          # 순위·우마·정산 점수 계산 (순수 함수)
   lib/stats.ts            # 월별 통계·랭킹 계산 (순수 함수)
   lib/sponsors.ts         # 후원 상태별 정리·최근 달성 고르기 (순수 함수)
+  lib/shared/             # 서버(api/)와 클라이언트가 함께 쓰는 코드 — 초기 멤버 시드, 예전 기록 형식 변환, 후원 입력 검증
   lib/storage/            # StorageAdapter 인터페이스 + RemoteStorage / LocalStorage 구현
   state/                  # DataProvider (멤버·대국·후원 상태), useMe (이 기기의 "나")
   components/             # 공용 UI (버튼, 카드, 아바타, 순위 배지, 통계 카드, 하단 내비 등)
@@ -90,7 +90,7 @@ npm run build        # 타입 검사 + 프로덕션 빌드
 
 > **저장소 공개 여부 주의** — Vercel 무료(Hobby) 플랜에서 GitHub 저장소를 **비공개**로 두면, Vercel 계정 주인이 아닌 사람이 작성한 커밋(다른 GitHub 계정으로 머지한 PR 등)은 배포되지 않고 Deployments 에 **Blocked** 로 표시됩니다. 이 저장소는 공개로 두는 것을 전제로 합니다. 비공개로 써야 한다면 Vercel **Settings → Git → Deploy Hooks** 로 배포 주소를 만들어 머지 후 호출하거나, Pro 플랜에서 작성자를 팀원으로 추가해야 합니다. (저장소를 비공개로 해도 앱 데이터는 Redis 에 있고 사이트는 주소만 알면 열리므로, 가려지는 것은 코드뿐입니다.)
 
-초기 멤버는 `api/_lib/seedMembers.ts` 에서 바꿉니다. 예전 초기 멤버(연경·민수·지수·현우)가 손대지 않은 채 남아 있고 대국 기록이 없으면 첫 접속 때 자동으로 새 초기 멤버로 교체됩니다.
+초기 멤버는 `src/lib/shared/seedMembers.ts` 에서 바꿉니다. 예전 초기 멤버(연경·민수·지수·현우)가 손대지 않은 채 남아 있고 대국 기록이 없으면 첫 접속 때 자동으로 새 초기 멤버로 교체됩니다.
 
 Redis 에는 다음 세 키만 사용합니다.
 

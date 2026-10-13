@@ -1,5 +1,5 @@
-import { normalizeGame } from '../../../api/_lib/normalize';
-import { normalizeSponsor } from '../../../api/_lib/sponsors';
+import { normalizeGame } from '../shared/normalize';
+import { normalizeSponsor } from '../shared/sponsors';
 import type { Game, Member, Sponsor } from '../types';
 
 const SNAPSHOT_KEY = 'mahjong.remoteSnapshot';

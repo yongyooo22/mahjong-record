@@ -1,4 +1,4 @@
-import type { Member, NewSponsor, Sponsor, SponsorAchievement, SponsorStatus } from '../../src/lib/types';
+import type { Member, NewSponsor, Sponsor, SponsorAchievement, SponsorStatus } from '../types';
 
 export const SPONSOR_STATUSES: readonly SponsorStatus[] = ['open', 'achieved', 'paid'];
 export const SPONSOR_TITLE_MAX = 30;
