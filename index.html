@@ -13,6 +13,12 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <!-- 아이폰 홈 화면 아이콘 (180×180, 투명 없이 — iOS 가 모서리를 둥글게 깎습니다) -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!--
+      홈 화면 앱 설정. scope 를 사이트 전체(/)로 정해 두어야, 홈 화면 아이콘으로 연 앱에서
+      하단 탭(기록·랭킹·내 기록 …)으로 주소가 바뀌어도 사파리 막대('완료' 버튼)가 뜨지 않습니다.
+      manifest 가 없으면 iOS 는 홈 화면에 추가할 때 보던 페이지 주소로 앱 범위를 정합니다.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
