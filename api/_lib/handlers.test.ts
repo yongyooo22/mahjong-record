@@ -124,7 +124,7 @@ describe('API 핸들러', () => {
     expect(r.out.status).toBe(404);
   });
 
-  it('POST /api/games 검증과 GET/DELETE', async () => {
+  it('POST /api/games 검증과 GET/PUT/DELETE', async () => {
     const store = new MemoryStore();
     const games = gamesHandler(() => store);
     let r = mockRes();
@@ -162,6 +162,25 @@ describe('API 핸들러', () => {
     expect(old.yakumans).toEqual([]);
     expect(old.title).toBeUndefined();
     store.games.delete('old');
+
+    // 수정: 내용은 바뀌고 id·createdAt 은 그대로
+    const byId = gameByIdHandler(() => store);
+    const edited = { ...validGame, place: '이수마장', scores: [40000, 30000, 25000, 5000], yakumans: [] };
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: edited }), r.res);
+    expect(r.out.status).toBe(200);
+    const updated = r.out.body as { id: string; createdAt: string; place: string; scores: number[]; yakumans: unknown[] };
+    expect(updated).toMatchObject({ id: created.id, createdAt: (created as unknown as { createdAt: string }).createdAt, place: '이수마장', scores: [40000, 30000, 25000, 5000], yakumans: [] });
+    expect(store.games.get(created.id)?.place).toBe('이수마장');
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: created.id }, body: { ...edited, playerIds: ['ghost', 'youngsik', 'sowon', 'chanyoung'] } }), r.res);
+    expect(r.out.status).toBe(400);
+
+    r = mockRes();
+    await byId(mockReq('PUT', { query: { id: 'nope' }, body: edited }), r.res);
+    expect(r.out.status).toBe(404);
+    expect(store.games.has('nope')).toBe(false);
 
     r = mockRes();
     await gameByIdHandler(() => store)(mockReq('DELETE', { query: { id: created.id } }), r.res);

@@ -11,6 +11,7 @@ export interface StorageAdapter {
   updateMember(id: string, patch: MemberPatch): Promise<Member>;
   listGames(): Promise<Game[]>;
   addGame(input: NewGame): Promise<Game>;
+  updateGame(id: string, input: NewGame): Promise<Game>;
   deleteGame(id: string): Promise<void>;
   listSponsors(): Promise<Sponsor[]>;
   addSponsor(input: NewSponsor): Promise<Sponsor>;

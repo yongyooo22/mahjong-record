@@ -177,17 +177,26 @@ export const gamesHandler = (resolveStore?: () => Store | null) =>
     methodNotAllowed(res, ['GET', 'POST']);
   }, resolveStore);
 
-/** DELETE /api/games/:id */
+/** PUT /api/games/:id (기록 수정), DELETE /api/games/:id */
 export const gameByIdHandler = (resolveStore?: () => Store | null) =>
   withStore(async (req: VercelRequest, res: VercelResponse, store: Store) => {
     const id = paramString(req.query.id);
-    if (req.method !== 'DELETE') {
-      methodNotAllowed(res, ['DELETE']);
+    if (req.method === 'PUT' || req.method === 'PATCH') {
+      const stored = await store.getGame(id);
+      if (!stored) throw new HttpError(404, '대국을 찾을 수 없습니다.');
+      const validated = validateGame(parseBody(req), await loadMembers(store));
+      const updated: Game = { ...validated, id, createdAt: stored.createdAt };
+      await store.putGame(updated);
+      res.status(200).json(updated);
       return;
     }
-    const removed = await store.deleteGame(id);
-    if (!removed) throw new HttpError(404, '대국을 찾을 수 없습니다.');
-    res.status(200).json({ ok: true, id });
+    if (req.method === 'DELETE') {
+      const removed = await store.deleteGame(id);
+      if (!removed) throw new HttpError(404, '대국을 찾을 수 없습니다.');
+      res.status(200).json({ ok: true, id });
+      return;
+    }
+    methodNotAllowed(res, ['PUT', 'DELETE']);
   }, resolveStore);
 
 function validateSponsor(input: Record<string, unknown>, current: Sponsor | null, members: Member[]): NewSponsor {

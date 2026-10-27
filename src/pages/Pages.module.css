@@ -620,5 +620,6 @@
 .dangerZone {
   display: flex;
   justify-content: center;
+  gap: 8px;
   padding: 8px 0 0;
 }
