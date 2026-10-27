@@ -1,4 +1,4 @@
-import { Sparkles, Trash2 } from 'lucide-react';
+import { Pencil, Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
@@ -134,6 +134,9 @@ export function GameDetailPage() {
             )}
 
             <div className={s.dangerZone}>
+              <Button variant="outline" size="sm" icon={<Pencil size={16} />} onClick={() => navigate(`/games/${game.id}/edit`)}>
+                기록 수정
+              </Button>
               <Button variant="red" size="sm" icon={<Trash2 size={16} />} onClick={() => setConfirm(true)}>
                 이 기록 삭제
               </Button>

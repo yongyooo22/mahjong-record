@@ -11,6 +11,7 @@ export interface Store {
   getMembers(): Promise<Member[] | null>;
   setMembers(members: Member[]): Promise<void>;
   getGames(): Promise<Game[]>;
+  getGame(id: string): Promise<Game | null>;
   putGame(game: Game): Promise<void>;
   deleteGame(id: string): Promise<boolean>;
   getSponsors(): Promise<Sponsor[]>;
@@ -47,6 +48,12 @@ export class RedisStore implements Store {
     const hash = await this.redis.hgetall<Record<string, Game | string>>(GAMES_KEY);
     if (!hash) return [];
     return Object.values(hash).map((v) => (typeof v === 'string' ? (JSON.parse(v) as Game) : v));
+  }
+
+  async getGame(id: string): Promise<Game | null> {
+    const value = await this.redis.hget<Game | string>(GAMES_KEY, id);
+    if (value == null) return null;
+    return typeof value === 'string' ? (JSON.parse(value) as Game) : value;
   }
 
   async putGame(game: Game): Promise<void> {
@@ -94,6 +101,9 @@ export class MemoryStore implements Store {
   }
   async getGames() {
     return [...this.games.values()];
+  }
+  async getGame(id: string) {
+    return this.games.get(id) ?? null;
   }
   async putGame(game: Game) {
     this.games.set(game.id, game);

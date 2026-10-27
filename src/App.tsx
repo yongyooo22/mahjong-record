@@ -24,7 +24,7 @@ function ScrollToTop() {
 
 export default function App() {
   const { pathname } = useLocation();
-  const hideNav = pathname === '/record';
+  const hideNav = pathname === '/record' || /^\/games\/[^/]+\/edit$/.test(pathname);
   return (
     <DataProvider>
       <ToastProvider>
@@ -36,6 +36,7 @@ export default function App() {
               <Route path="/record" element={<RecordPage />} />
               <Route path="/games" element={<GamesPage />} />
               <Route path="/games/:id" element={<GameDetailPage />} />
+              <Route path="/games/:id/edit" element={<RecordPage />} />
               <Route path="/ranking" element={<RankingPage />} />
               <Route path="/ranking/:month" element={<MonthReportPage />} />
               <Route path="/me" element={<MyPage />} />

@@ -16,6 +16,7 @@ interface DataContextValue {
   syncing: boolean;
   retry: () => void;
   addGame: (input: NewGame) => Promise<Game>;
+  updateGame: (id: string, input: NewGame) => Promise<Game>;
   deleteGame: (id: string) => Promise<void>;
   addMember: (input: NewMember) => Promise<Member>;
   updateMember: (id: string, patch: MemberPatch) => Promise<Member>;
@@ -110,6 +111,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return game;
   }, []);
 
+  const updateGame = useCallback(async (id: string, input: NewGame) => {
+    const game = await storage().updateGame(id, input);
+    setGames((prev) => prev.map((g) => (g.id === id ? game : g)));
+    return game;
+  }, []);
+
   const deleteGame = useCallback(async (id: string) => {
     await storage().deleteGame(id);
     setGames((prev) => prev.filter((g) => g.id !== id));
@@ -155,6 +162,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       syncing,
       retry,
       addGame,
+      updateGame,
       deleteGame,
       addMember,
       updateMember,
@@ -162,7 +170,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateSponsor,
       deleteSponsor,
     }),
-    [status, error, storageKind, members, games, sponsors, syncing, retry, addGame, deleteGame, addMember, updateMember, addSponsor, updateSponsor, deleteSponsor],
+    [status, error, storageKind, members, games, sponsors, syncing, retry, addGame, updateGame, deleteGame, addMember, updateMember, addSponsor, updateSponsor, deleteSponsor],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

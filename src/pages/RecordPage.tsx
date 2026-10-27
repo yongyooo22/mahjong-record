@@ -1,14 +1,16 @@
 import { AlertTriangle, ArrowLeftRight, Calendar, Check, Clock, LayoutGrid, MapPin, Plus, Sparkles, Trash2, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
+import { EmptyState } from '../components/EmptyState';
 import { Mascot } from '../components/Mascot';
 import { Modal } from '../components/Modal';
 import { PageHeader } from '../components/PageHeader';
 import { Points } from '../components/Points';
 import { RankBadge } from '../components/RankBadge';
+import { SkeletonRows } from '../components/Skeleton';
 import { useToast } from '../components/Toast';
 import { headerBgStyle } from '../config/images';
 import { DEFAULT_PLACES, mergePlaces, PLACE_MAX_LENGTH, readCustomPlaces, saveCustomPlace } from '../config/places';
@@ -17,7 +19,7 @@ import { YAKUMAN_MAX_PER_GAME, YAKUMAN_NAME_MAX_LENGTH, YAKUMAN_NAMES, YAKUMAN_O
 import { fromDateTimeInputs, toDateInput, toTimeInput } from '../lib/format';
 import { computeResults, formatScore, scoreTotalDiff, tieGroups } from '../lib/scoring';
 import { defaultPlayerIds, sortGamesDesc } from '../lib/stats';
-import type { NewGame, Yakuman } from '../lib/types';
+import type { Game, NewGame, Yakuman } from '../lib/types';
 import { useData, useMemberMap } from '../state/DataProvider';
 import ui from '../components/ui.module.css';
 import app from '../styles/App.module.css';
@@ -55,26 +57,57 @@ function toggleSign(raw: string): string {
   return raw.startsWith('-') ? raw.slice(1) : `-${raw}`;
 }
 
+function toYakumanRow(y: Yakuman): YakumanRow {
+  return YAKUMAN_NAMES.includes(y.name) ? { playerId: y.playerId, name: y.name, customName: '' } : { playerId: y.playerId, name: YAKUMAN_OTHER, customName: y.name };
+}
+
+/** /record 는 새 기록, /games/:id/edit 는 저장된 기록 수정 */
 export function RecordPage() {
+  const { id } = useParams();
+  const { status, syncing, games } = useData();
+  if (!id) return <RecordForm />;
+  const game = games.find((g) => g.id === id);
+  if (game) return <RecordForm key={game.id} editing={game} />;
+  return (
+    <>
+      <PageHeader title="기록 수정하기" back />
+      <div className={app.page}>
+        {status === 'loading' || syncing ? (
+          <SkeletonRows rows={2} height={160} />
+        ) : (
+          <Card>
+            <EmptyState icon={<Trash2 size={22} />} title="기록을 찾을 수 없어요" description="이미 삭제되었거나 주소가 잘못되었어요." />
+          </Card>
+        )}
+      </div>
+    </>
+  );
+}
+
+function RecordForm({ editing }: { editing?: Game }) {
   const navigate = useNavigate();
   const toast = useToast();
-  const { status, members, games, addGame } = useData();
+  const { status, members, games, addGame, updateGame } = useData();
   const memberMap = useMemberMap();
   const activeMembers = useMemo(() => members.filter((m) => m.active), [members]);
 
-  const [gameType, setGameType] = useState<GameType>('hanchan');
-  const [date, setDate] = useState(() => toDateInput(new Date()));
-  const [time, setTime] = useState(() => toTimeInput(new Date()));
+  const [gameType, setGameType] = useState<GameType>(editing?.gameType ?? 'hanchan');
+  const [date, setDate] = useState(() => toDateInput(editing ? new Date(editing.playedAt) : new Date()));
+  const [time, setTime] = useState(() => toTimeInput(editing ? new Date(editing.playedAt) : new Date()));
 
   // 장소: 기본 목록 + 기록에 쓰인 장소 + 이 기기에서 추가한 장소
   const [customPlaces, setCustomPlaces] = useState<string[]>(() => readCustomPlaces());
   const places = useMemo(() => mergePlaces(games.map((g) => g.place), customPlaces), [games, customPlaces]);
-  const [place, setPlace] = useState('');
+  const [place, setPlace] = useState(editing?.place ?? '');
   const [placeDraft, setPlaceDraft] = useState('');
   const [addingPlace, setAddingPlace] = useState(false);
 
-  const [yakumans, setYakumans] = useState<YakumanRow[]>([]);
-  const [slots, setSlots] = useState<Slot[]>(() => Array.from({ length: PLAYER_COUNT }, () => ({ memberId: '', score: '' })));
+  const [yakumans, setYakumans] = useState<YakumanRow[]>(() => editing?.yakumans.map(toYakumanRow) ?? []);
+  const [slots, setSlots] = useState<Slot[]>(() =>
+    editing
+      ? editing.playerIds.map((memberId, i) => ({ memberId, score: String(editing.scores[i]) }))
+      : Array.from({ length: PLAYER_COUNT }, () => ({ memberId: '', score: '' })),
+  );
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -130,7 +163,8 @@ export function RecordPage() {
   const removeYakuman = (i: number) => setYakumans((prev) => prev.filter((_, idx) => idx !== i));
   const yakumanIncomplete = yakumans.some((y) => !selectedIds.includes(y.playerId) || !yakumanName(y));
 
-  const rules = DEFAULT_RULES;
+  // 수정할 때는 저장 당시 규칙을 그대로 씁니다.
+  const rules = editing?.rules ?? DEFAULT_RULES;
   const scores = slots.map((p) => parseScore(p.score));
   const allScored = scores.every((v) => v !== null);
   const allSelected = slots.every((p) => p.memberId !== '');
@@ -184,9 +218,15 @@ export function RecordPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      await addGame(game);
-      toast('대국이 저장되었어요!');
-      navigate('/', { replace: true });
+      if (editing) {
+        await updateGame(editing.id, game);
+        toast('기록을 수정했어요.');
+        navigate(`/games/${editing.id}`, { replace: true });
+      } else {
+        await addGame(game);
+        toast('대국이 저장되었어요!');
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : '저장에 실패했습니다. 다시 시도해 주세요.');
       setSaving(false);
@@ -202,14 +242,15 @@ export function RecordPage() {
     void doSave();
   };
 
+  // 수정 중인 기록의 참가자는 지금 비활성이어도 선택지에 남깁니다.
   const selectableFor = (i: number) =>
-    activeMembers.filter((m) => m.id === slots[i].memberId || !slots.some((p, idx) => idx !== i && p.memberId === m.id));
+    members.filter((m) => m.id === slots[i].memberId || (m.active && !slots.some((p, idx) => idx !== i && p.memberId === m.id)));
 
   return (
     <>
-      <PageHeader title="대국 기록하기" back className={app.headerImage} style={headerBgStyle('record')}>
+      <PageHeader title={editing ? '기록 수정하기' : '대국 기록하기'} back className={app.headerImage} style={headerBgStyle('record')}>
         <div className={s.headerBody}>
-          <p className={s.headerHint}>점수를 입력하면 순위와 우마가 바로 계산돼요.</p>
+          <p className={s.headerHint}>{editing ? '고친 내용으로 순위와 우마가 다시 계산돼요.' : '점수를 입력하면 순위와 우마가 바로 계산돼요.'}</p>
           <Mascot name="record" className={s.headerMascot} />
         </div>
       </PageHeader>
@@ -303,7 +344,7 @@ export function RecordPage() {
             </div>
           </Card>
 
-          {activeMembers.length < PLAYER_COUNT && status === 'ready' && (
+          {!editing && activeMembers.length < PLAYER_COUNT && status === 'ready' && (
             <div className={[s.notice, s.noticeWarn].join(' ')}>
               <AlertTriangle size={16} />
               <div>
@@ -499,7 +540,7 @@ export function RecordPage() {
 
           <div className={s.saveWrap}>
             <Button type="submit" variant="danger" full className={s.save} disabled={!canSave} loading={saving} icon={<Check size={22} strokeWidth={3} />}>
-              저장하기
+              {editing ? '수정 완료' : '저장하기'}
             </Button>
           </div>
         </form>

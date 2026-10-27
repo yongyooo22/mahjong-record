@@ -111,6 +111,17 @@ export class LocalStorageAdapter implements StorageAdapter {
     return game;
   }
 
+  async updateGame(id: string, input: NewGame): Promise<Game> {
+    const list = this.games();
+    const idx = list.findIndex((g) => g.id === id);
+    if (idx < 0) throw new StorageError('대국을 찾을 수 없습니다.', 404);
+    const updated: Game = { ...input, id, createdAt: list[idx].createdAt };
+    const next = [...list];
+    next[idx] = updated;
+    writeJson(this.store, GAMES_KEY, next);
+    return updated;
+  }
+
   async deleteGame(id: string): Promise<void> {
     const list = this.games();
     if (!list.some((g) => g.id === id)) throw new StorageError('대국을 찾을 수 없습니다.', 404);

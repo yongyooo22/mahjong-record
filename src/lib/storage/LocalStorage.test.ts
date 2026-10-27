@@ -28,7 +28,7 @@ describe('LocalStorageAdapter', () => {
     await expect(a.updateMember('nope', { name: 'x' })).rejects.toThrow();
   });
 
-  it('대국 추가/삭제가 새 인스턴스에서도 유지된다', async () => {
+  it('대국 추가/수정/삭제가 새 인스턴스에서도 유지된다', async () => {
     const a = new LocalStorageAdapter();
     const g = await a.addGame({
       playedAt: '2025-03-08T19:30:00.000Z',
@@ -43,6 +43,13 @@ describe('LocalStorageAdapter', () => {
     expect(g.id).toMatch(/^g-/);
     const b = new LocalStorageAdapter();
     expect((await b.listGames()).map((x) => x.id)).toEqual([g.id]);
+    const { id: _id, createdAt: _createdAt, ...input } = g;
+    void _id;
+    void _createdAt;
+    const edited = await b.updateGame(g.id, { ...input, place: '마작카페', scores: [40000, 30000, 25000, 5000] });
+    expect(edited).toMatchObject({ id: g.id, createdAt: g.createdAt, place: '마작카페', scores: [40000, 30000, 25000, 5000] });
+    expect(await new LocalStorageAdapter().listGames()).toEqual([edited]);
+    await expect(b.updateGame('nope', input)).rejects.toThrow();
     await b.deleteGame(g.id);
     expect(await new LocalStorageAdapter().listGames()).toEqual([]);
     await expect(b.deleteGame(g.id)).rejects.toThrow();

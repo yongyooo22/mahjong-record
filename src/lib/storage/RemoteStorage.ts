@@ -83,6 +83,13 @@ export class RemoteStorageAdapter implements StorageAdapter {
     return request<Game>('/api/games', { method: 'POST', body: JSON.stringify(input) });
   }
 
+  updateGame(id: string, input: NewGame): Promise<Game> {
+    return request<Game>(`/api/games/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
   async deleteGame(id: string): Promise<void> {
     await request<unknown>(`/api/games/${encodeURIComponent(id)}`, { method: 'DELETE' });
   }
