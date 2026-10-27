@@ -50,6 +50,11 @@ function parseScore(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** 휴대폰 숫자 키패드에는 '-' 키가 없어서 버튼으로 부호를 바꿉니다. */
+function toggleSign(raw: string): string {
+  return raw.startsWith('-') ? raw.slice(1) : `-${raw}`;
+}
+
 export function RecordPage() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -330,6 +335,20 @@ export function RecordPage() {
                   </select>
                 </div>
                 <div className={s.scoreWrap}>
+                  <button
+                    type="button"
+                    className={[s.scoreSign, slot.score.startsWith('-') ? s.scoreSignOn : ''].join(' ')}
+                    onPointerDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      updateSlot(i, { score: toggleSign(slot.score) });
+                      (e.currentTarget.nextElementSibling as HTMLInputElement | null)?.focus();
+                    }}
+                    aria-label="마이너스 점수로 바꾸기"
+                    aria-pressed={slot.score.startsWith('-')}
+                    tabIndex={-1}
+                  >
+                    ±
+                  </button>
                   <input
                     className={s.scoreInput}
                     inputMode="numeric"
