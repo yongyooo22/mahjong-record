@@ -14,11 +14,13 @@ export function Modal({ open, title, children, actions, onClose }: Props) {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // 페이지 스크롤은 html(뷰포트)이 맡으므로 html 에서 막습니다.
+    const root = document.documentElement;
+    const prev = root.style.overflow;
+    root.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
+      root.style.overflow = prev;
     };
   }, [open, onClose]);
 

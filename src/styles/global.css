@@ -41,9 +41,16 @@
   box-sizing: border-box;
 }
 
+/*
+ * 가로 넘침 숨김과 당겨서 새로고침 막기는 html 에만 둡니다.
+ * body 에도 overflow 를 주면 body 가 따로 스크롤 영역이 되어, 카카오톡 인앱 브라우저(안드로이드 WebView)에서
+ * 손가락 스크롤이 body 에 붙잡히고 overscroll-behavior 때문에 페이지로 넘어가지 못해 화면이 스크롤되지 않습니다.
+ */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 html,
@@ -57,11 +64,6 @@ body {
   font-size: 15px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-body {
-  overscroll-behavior-y: none;
 }
 
 #root {
