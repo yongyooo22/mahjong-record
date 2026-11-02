@@ -24,6 +24,12 @@
   --rank-bronze-bg: #f5e2d2;
   --rank-gray: #b8bec5;
   --rank-gray-bg: #f0f2f4;
+  /* 점수 변동 그래프: 나(초록)·비교 상대(주황)는 색약에서도 구분되는 조합, 나머지는 연한 회색 */
+  --chart-me: #14866b;
+  --chart-compare: #d9772a;
+  --chart-rest: #cfd5d9;
+  --chart-grid: #eef0ee;
+  --chart-zero: #b9c1c6;
 
   --radius-card: 16px;
   --radius-btn: 14px;

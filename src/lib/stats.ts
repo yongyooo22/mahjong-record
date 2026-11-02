@@ -303,3 +303,63 @@ export function computeHallOfFame(games: Game[], members: Member[]): FameMonth[]
 export function isMonthKey(value: string): boolean {
   return /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
 }
+
+/** 오래된 순 정렬 (대국 일시 → 생성 시각) */
+export function sortGamesAsc(games: Game[]): Game[] {
+  return sortGamesDesc(games).reverse();
+}
+
+export interface PointsTimeline {
+  /** 오래된 순 대국 */
+  games: Game[];
+  /** 멤버별 누적 우마. 시작점 0 을 포함해 games.length + 1 개 (대국에 빠지면 그대로) */
+  series: Map<string, number[]>;
+}
+
+/** 대국 순서대로 멤버별 누적 우마 (랭킹의 '누적 우마 추이' 그래프) */
+export function cumulativePoints(games: Game[], memberIds: string[]): PointsTimeline {
+  const ordered = sortGamesAsc(games);
+  const series = new Map(memberIds.map((id) => [id, [0]]));
+  for (const game of ordered) {
+    const results = computeResults(game.scores, game.rules, game.gameType);
+    for (const [id, values] of series) {
+      const index = game.playerIds.indexOf(id);
+      const gained = index >= 0 ? (results[index]?.points ?? 0) : 0;
+      values.push(round1(values[values.length - 1] + gained));
+    }
+  }
+  return { games: ordered, series };
+}
+
+export interface MemberHistoryRow extends MemberGameRow {
+  /** 이 대국까지의 누적 우마 */
+  cumulative: number;
+}
+
+/** 특정 멤버가 참여한 대국을 오래된 순으로, 누적 우마와 함께 (내 기록의 '내 우마 흐름' 그래프) */
+export function memberPointsHistory(games: Game[], memberId: string): MemberHistoryRow[] {
+  let cumulative = 0;
+  return gamesForMember(games, memberId)
+    .reverse()
+    .map((row) => {
+      cumulative = round1(cumulative + row.points);
+      return { ...row, cumulative };
+    });
+}
+
+/**
+ * 그래프 가로축 글자 (대국 순서별, 맨 앞 시작점은 빈 글자).
+ * 여러 달에 걸치면 달이 바뀌는 대국에 'N월', 한 달 안이면 날짜가 바뀌는 대국에 'M.D'.
+ */
+export function timelineLabels(games: Game[]): string[] {
+  const months = new Set(games.map((g) => monthKey(g.playedAt)));
+  const labels = [''];
+  let prev = '';
+  for (const g of games) {
+    const d = new Date(g.playedAt);
+    const key = months.size > 1 ? `${d.getFullYear()}-${d.getMonth()}` : `${d.getMonth()}-${d.getDate()}`;
+    labels.push(key === prev ? '' : months.size > 1 ? `${d.getMonth() + 1}월` : `${d.getMonth() + 1}.${d.getDate()}`);
+    prev = key;
+  }
+  return labels;
+}
