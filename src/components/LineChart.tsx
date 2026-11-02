@@ -35,7 +35,7 @@ interface Props {
 
 const W = 320;
 const H = 190;
-const PAD = { left: 30, right: 52, top: 10, bottom: 24 };
+const PAD = { left: 30, right: 60, top: 10, bottom: 24 };
 /** 가로축 글자 사이 최소 간격 (viewBox 단위) */
 const LABEL_GAP = 30;
 
@@ -135,12 +135,13 @@ export function LineChart({ series, xLabels, dots, renderTip, onOpen, ariaLabel 
         {dots?.map((d) => (
           <circle key={d.index} cx={x(d.index)} cy={y(d.value)} r={active === d.index ? 5.5 : 4.2} style={{ fill: d.color, stroke: 'var(--white)' }} strokeWidth={2} />
         ))}
+        {/* 끝 이름표: 겹치지 않게 벌린 줄마다 그 선의 색 점을 붙여, 어느 선의 이름인지 색으로 이어 봅니다. */}
         {endLabels.map(({ a, y: ly }) => {
           const last = a.values[n - 1];
           return (
             <g key={a.id}>
-              <circle cx={x(n - 1)} cy={y(last)} r={4} style={{ fill: a.color, stroke: 'var(--white)' }} strokeWidth={2} />
-              <text x={x(n - 1) + 7} y={ly + 3.5} className={s.chartEndLabel}>
+              <circle cx={x(n - 1) + 8} cy={ly} r={3.5} style={{ fill: a.color }} />
+              <text x={x(n - 1) + 14} y={ly + 3.5} className={s.chartEndLabel}>
                 {a.label}{' '}
                 <tspan style={{ fill: last > 0 ? 'var(--up)' : last < 0 ? 'var(--red)' : 'var(--text-muted)' }}>{formatPoints(last)}</tspan>
               </text>
