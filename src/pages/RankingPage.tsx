@@ -1,5 +1,5 @@
 import { Crown, Trophy } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Card } from '../components/Card';
@@ -12,29 +12,40 @@ import { RankBadge } from '../components/RankBadge';
 import { Segmented } from '../components/Segmented';
 import { SkeletonRows } from '../components/Skeleton';
 import { formatAvgRank } from '../lib/format';
-import { computeRanking, currentMonthKey, gamesInMonth } from '../lib/stats';
+import { computeRanking, currentMonthKey, gamesInMonth, isMonthKey } from '../lib/stats';
 import { useData } from '../state/DataProvider';
+import { useMe } from '../state/useMe';
 import app from '../styles/App.module.css';
 import { HallOfFame } from './HallOfFame';
+import { RankingTrendCard } from './PointsCharts';
 import s from './Pages.module.css';
 
 type Mode = 'month' | 'all' | 'fame';
 
 export function RankingPage() {
   const { status, error, retry, games, members } = useData();
-  // 고른 탭을 주소(?tab=)에 남겨서, 명예의 전당에서 달 현황을 보고 뒤로 오면 같은 탭이 열리도록
+  // 고른 탭과 달을 주소(?tab=, ?month=)에 남겨서, 명예의 전당·대국 상세를 보고 뒤로 오면 같은 화면이 열리도록
   const [params, setParams] = useSearchParams();
   const tab = params.get('tab');
   const mode: Mode = tab === 'all' || tab === 'fame' ? tab : 'month';
-  const setMode = (next: Mode) => setParams(next === 'month' ? {} : { tab: next }, { replace: true });
-  const [month, setMonth] = useState(currentMonthKey());
   const maxMonth = currentMonthKey();
+  const monthParam = params.get('month');
+  const month = monthParam && isMonthKey(monthParam) && monthParam <= maxMonth ? monthParam : maxMonth;
+  const updateParams = (next: { mode?: Mode; month?: string }) => {
+    const nextMode = next.mode ?? mode;
+    const nextMonth = next.month ?? month;
+    const query: Record<string, string> = {};
+    if (nextMode !== 'month') query.tab = nextMode;
+    if (nextMonth !== maxMonth) query.month = nextMonth;
+    setParams(query, { replace: true });
+  };
+  const setMode = (nextMode: Mode) => updateParams({ mode: nextMode });
+  const setMonth = (nextMonth: string) => updateParams({ month: nextMonth });
 
-  const rows = useMemo(
-    () => computeRanking(mode === 'month' ? gamesInMonth(games, month) : games, members),
-    [games, members, mode, month],
-  );
-  const gameCount = mode === 'month' ? gamesInMonth(games, month).length : games.length;
+  const { me, isExplicit } = useMe();
+  const periodGames = useMemo(() => (mode === 'month' ? gamesInMonth(games, month) : games), [games, mode, month]);
+  const rows = useMemo(() => computeRanking(periodGames, members), [periodGames, members]);
+  const gameCount = periodGames.length;
 
   return (
     <>
@@ -78,6 +89,9 @@ export function RankingPage() {
               description="대국을 기록하면 누적 우마 순으로 랭킹이 만들어져요."
             />
           </Card>
+        )}
+        {status === 'ready' && mode !== 'fame' && rows.length > 0 && (
+          <RankingTrendCard games={periodGames} rows={rows} meId={isExplicit && me ? me.id : null} />
         )}
         {status === 'ready' && mode !== 'fame' && rows.length > 0 && (
           <div className={s.list}>

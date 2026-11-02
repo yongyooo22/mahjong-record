@@ -1,6 +1,6 @@
 import { ChevronDown, Coins, Crown, Dices, FileText, PieChart, Sparkles, TrendingUp, UserRound, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Card, SectionHeader } from '../components/Card';
@@ -17,10 +17,11 @@ import { Skeleton, SkeletonRows } from '../components/Skeleton';
 import { StatCard, StatGrid } from '../components/StatCard';
 import { formatDateShort, formatWeekday } from '../lib/format';
 import { formatPoints, formatScore } from '../lib/scoring';
-import { computeMemberStats, computeMonthlySummary, currentMonthKey, formatMonthKey, gamesForMember, gamesInMonth } from '../lib/stats';
+import { computeMemberStats, computeMonthlySummary, currentMonthKey, formatMonthKey, gamesForMember, gamesInMonth, isMonthKey } from '../lib/stats';
 import type { Member } from '../lib/types';
 import { useData } from '../state/DataProvider';
 import { useMe } from '../state/useMe';
+import { MyPointsFlowCard } from './PointsCharts';
 import app from '../styles/App.module.css';
 import pages from './Pages.module.css';
 import s from './My.module.css';
@@ -48,9 +49,20 @@ export function MyPage() {
   const { status, error, retry, games, members } = useData();
   const { me, setMe, isExplicit } = useMe();
   const [pickOpen, setPickOpen] = useState(false);
-  const [mode, setMode] = useState<'month' | 'all'>('month');
-  const [month, setMonth] = useState(currentMonthKey());
+  // 고른 기간과 달을 주소(?tab=, ?month=)에 남겨서, 대국 상세를 보고 뒤로 오면 같은 화면이 열리도록
+  const [params, setParams] = useSearchParams();
+  const mode: 'month' | 'all' = params.get('tab') === 'all' ? 'all' : 'month';
   const maxMonth = currentMonthKey();
+  const monthParam = params.get('month');
+  const month = monthParam && isMonthKey(monthParam) && monthParam <= maxMonth ? monthParam : maxMonth;
+  const updateParams = (next: { mode?: 'month' | 'all'; month?: string }) => {
+    const query: Record<string, string> = {};
+    if ((next.mode ?? mode) === 'all') query.tab = 'all';
+    if ((next.month ?? month) !== maxMonth) query.month = next.month ?? month;
+    setParams(query, { replace: true });
+  };
+  const setMode = (nextMode: 'month' | 'all') => updateParams({ mode: nextMode });
+  const setMonth = (nextMonth: string) => updateParams({ month: nextMonth });
 
   const periodGames = useMemo(() => (mode === 'month' ? gamesInMonth(games, month) : games), [games, mode, month]);
   const monthly = useMemo(() => (me && mode === 'month' ? computeMonthlySummary(games, me.id, month) : null), [games, me, mode, month]);
@@ -177,6 +189,9 @@ export function MyPage() {
                 </StatGrid>
               )}
             </section>
+
+            {/* 내 우마 흐름 */}
+            <MyPointsFlowCard games={periodGames} me={me} periodLabel={periodLabel} />
 
             {/* 순위 분포 */}
             <Card>

@@ -8,13 +8,16 @@ import {
   computeMemberStats,
   computeMonthlySummary,
   computeRanking,
+  cumulativePoints,
   defaultPlayerIds,
   gamesForMember,
   gamesInMonth,
   isMonthKey,
+  memberPointsHistory,
   monthKey,
   previousMonthKey,
   sortGamesDesc,
+  timelineLabels,
   yakumansOf,
 } from './stats';
 
@@ -143,6 +146,31 @@ describe('멤버별 대국', () => {
     expect(rows[0]).toMatchObject({ rank: 1, score: 38200, points: 28.2 });
     expect(rows[2]).toMatchObject({ rank: 4, score: 10000 });
     expect(gamesForMember([g1], 'e')).toEqual([]);
+  });
+});
+
+describe('점수 변동 그래프', () => {
+  it('대국 순서대로 멤버별 누적 우마 (빠진 대국은 그대로)', () => {
+    const { games, series } = cumulativePoints([g1, g3, g2], ['a', 'd', 'e']);
+    expect(games.map((g) => g.id)).toEqual(['g3', 'g2', 'g1']);
+    expect(series.get('a')).toEqual([0, -30, -40, -11.8]);
+    expect(series.get('d')).toEqual([0, 0, -30, -57.2]);
+    expect(series.get('e')).toEqual([0, 30, 30, 30]);
+  });
+
+  it('내 우마 흐름: 참여한 대국만 오래된 순으로 누적', () => {
+    const rows = memberPointsHistory([g1, g3, g2], 'a');
+    expect(rows.map((r) => [r.game.id, r.rank, r.points, r.cumulative])).toEqual([
+      ['g3', 4, -30, -30],
+      ['g2', 3, -10, -40],
+      ['g1', 1, 28.2, -11.8],
+    ]);
+    expect(memberPointsHistory([g1], 'e')).toEqual([]);
+  });
+
+  it('가로축 글자: 한 달이면 날짜, 여러 달이면 달', () => {
+    expect(timelineLabels([g2, g1])).toEqual(['', '3.6', '3.8']);
+    expect(timelineLabels([g3, g2, g1])).toEqual(['', '2월', '3월', '']);
   });
 });
 
