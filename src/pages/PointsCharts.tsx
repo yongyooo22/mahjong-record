@@ -10,6 +10,8 @@ import { cumulativePoints, memberPointsHistory, timelineLabels, type RankingRow 
 import type { Game, Member } from '../lib/types';
 
 const RANK_COLOR = ['var(--rank-gold)', 'var(--rank-silver)', 'var(--rank-bronze)', 'var(--rank-gray)'];
+/** 누적 우마 추이에서 고른 사람의 색 (0번은 나). 한 번에 이만큼까지 고를 수 있습니다. */
+const SERIES_COLOR = ['var(--chart-me)', 'var(--chart-compare)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)'];
 const OPEN_HINT = '한 번 더 누르면 대국 상세';
 
 function pointsClass(v: number): string {
@@ -18,19 +20,48 @@ function pointsClass(v: number): string {
 
 /**
  * 랭킹 탭: 대국 순서대로 모두의 누적 우마.
- * 나(초록)와 비교 상대 한 명(주황)만 색을 칠하고 나머지는 회색으로 둡니다.
- * 나를 고르지 않았거나 이 기간에 내 대국이 없으면 1위가 초록 자리에 섭니다.
+ * 이름을 눌러 고른 사람(한 명이든 여러 명이든)만 색을 칠하고 나머지는 회색으로 둡니다.
+ * 처음에는 나(초록)와 1위(주황). 나를 고르지 않았거나 이 기간에 내 대국이 없으면 1위·2위.
+ * 색은 고를 때 정해져 그 사람이 선택돼 있는 동안 바뀌지 않고, 초록은 나에게만 씁니다.
  */
 export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: RankingRow[]; meId: string | null }) {
   const navigate = useNavigate();
   const ids = useMemo(() => rows.map((r) => r.member.id), [rows]);
   const timeline = useMemo(() => cumulativePoints(games, ids), [games, ids]);
-  const [picked, setPicked] = useState<string | null>(null);
+  /** 고른 사람 → 색 번호. null 이면 기본 선택 */
+  const [picked, setPicked] = useState<Record<string, number> | null>(null);
 
-  const primary = meId && ids.includes(meId) ? meId : ids[0];
-  const compare = picked && picked !== primary && ids.includes(picked) ? picked : (ids.find((id) => id !== primary) ?? null);
+  const meInList = !!meId && ids.includes(meId);
+  const selected = useMemo(() => {
+    // 기간이 바뀌어 목록에서 빠진 사람은 빼고, 아무도 안 남으면 기본 선택
+    const kept = Object.fromEntries(Object.entries(picked ?? {}).filter(([id]) => ids.includes(id)));
+    if (Object.keys(kept).length > 0) return kept;
+    const first = meInList ? meId! : ids[0];
+    const second = ids.find((id) => id !== first);
+    return { ...(first ? { [first]: 0 } : {}), ...(second ? { [second]: 1 } : {}) };
+  }, [picked, ids, meId, meInList]);
+  const selectedCount = Object.keys(selected).length;
+  const full = selectedCount >= SERIES_COLOR.length;
+
+  const toggle = (id: string) => {
+    if (id in selected) {
+      if (selectedCount === 1) return; // 적어도 한 명은 보여 줍니다.
+      const next = { ...selected };
+      delete next[id];
+      setPicked(next);
+      return;
+    }
+    const used = new Set(Object.values(selected));
+    // 0번(초록)은 나에게 남겨 둡니다.
+    const slot = id === meId && !used.has(0) ? 0 : SERIES_COLOR.findIndex((_, k) => !used.has(k) && !(k === 0 && meInList));
+    if (slot < 0) return;
+    setPicked({ ...selected, [id]: slot });
+  };
+
+  const isOn = (id: string) => id in selected;
+  const tracked = ids.filter(isOn);
   const nameOf = (id: string) => rows.find((r) => r.member.id === id)?.member.name ?? '';
-  const colorOf = (id: string) => (id === primary ? 'var(--chart-me)' : id === compare ? 'var(--chart-compare)' : 'var(--chart-rest)');
+  const colorOf = (id: string) => (isOn(id) ? SERIES_COLOR[selected[id]] : 'var(--chart-rest)');
   const last = (id: string) => {
     const v = timeline.series.get(id)!;
     return v[v.length - 1];
@@ -42,7 +73,7 @@ export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: R
     id,
     values: timeline.series.get(id)!,
     color: colorOf(id),
-    emphasis: id === primary || id === compare,
+    emphasis: isOn(id),
     label: nameOf(id),
   }));
 
@@ -51,7 +82,6 @@ export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: R
     const results = computeResults(game.scores, game.rules, game.gameType)
       .map((r) => ({ ...r, id: game.playerIds[r.index] }))
       .sort((a, b) => a.rank - b.rank);
-    const tracked = [primary, compare].filter((id): id is string => !!id);
     return (
       <>
         <div className={ui.chartTipHead}>
@@ -77,9 +107,9 @@ export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: R
   return (
     <Card>
       <SectionHeader icon={<TrendingUp size={18} />} title="누적 우마 추이" right={`${timeline.games.length}국`} />
-      <div className={ui.chartChips} role="group" aria-label="비교할 사람">
+      <div className={ui.chartChips} role="group" aria-label="그래프에 볼 사람">
         {ids.map((id) => {
-          const on = id === primary || id === compare;
+          const on = isOn(id);
           return (
             <button
               key={id}
@@ -87,7 +117,7 @@ export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: R
               className={ui.chartChip}
               style={on ? { borderColor: colorOf(id), color: colorOf(id) } : undefined}
               aria-pressed={on}
-              onClick={() => id !== primary && setPicked(id)}
+              onClick={() => toggle(id)}
             >
               <i className={ui.chartChipDot} style={{ background: colorOf(id) }} />
               {nameOf(id)}
@@ -102,12 +132,13 @@ export function RankingTrendCard({ games, rows, meId }: { games: Game[]; rows: R
         xLabels={timelineLabels(timeline.games)}
         renderTip={renderTip}
         onOpen={(i) => navigate(`/games/${timeline.games[i - 1].id}`)}
-        ariaLabel={`누적 우마 추이: ${[primary, compare]
-          .filter((id): id is string => !!id)
-          .map((id) => `${nameOf(id)} ${formatPoints(last(id))}`)
-          .join(', ')}`}
+        ariaLabel={`누적 우마 추이: ${tracked.map((id) => `${nameOf(id)} ${formatPoints(last(id))}`).join(', ')}`}
       />
-      {ids.length > 2 && <div className={ui.chartHint}>이름을 누르면 비교할 사람이 바뀌어요</div>}
+      {ids.length > 1 && (
+        <div className={ui.chartHint}>
+          {full ? `한 번에 ${SERIES_COLOR.length}명까지 볼 수 있어요. 다른 사람을 보려면 한 명을 빼 주세요` : '이름을 눌러 볼 사람을 넣고 빼요 (한 명만, 여러 명 모두 돼요)'}
+        </div>
+      )}
     </Card>
   );
 }

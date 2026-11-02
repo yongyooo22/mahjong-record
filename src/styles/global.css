@@ -24,9 +24,13 @@
   --rank-bronze-bg: #f5e2d2;
   --rank-gray: #b8bec5;
   --rank-gray-bg: #f0f2f4;
-  /* 점수 변동 그래프: 나(초록)·비교 상대(주황)는 색약에서도 구분되는 조합, 나머지는 연한 회색 */
+  /* 점수 변동 그래프: 고른 사람 순서대로 1~6번 색 (색약에서도 이웃한 색끼리 구분되는 조합), 고르지 않은 사람은 연한 회색 */
   --chart-me: #14866b;
   --chart-compare: #d9772a;
+  --chart-3: #2a78d6;
+  --chart-4: #c94f8c;
+  --chart-5: #7a5bd0;
+  --chart-6: #a8890a;
   --chart-rest: #cfd5d9;
   --chart-grid: #eef0ee;
   --chart-zero: #b9c1c6;
