@@ -80,6 +80,25 @@ describe('LocalStorageAdapter', () => {
     expect(games.find((g) => g.id === 'g-h')?.rules.tonpuuUmaMultiplier).toBe(1);
   });
 
+  it('2026년 11월(한국 시간) 이후 대국의 예전 우마는 새 우마로 다시 계산된다', async () => {
+    const OLD = { ...DEFAULT_RULES, uma: [15, 5, -5, -15] };
+    const base = { place: '', yakumans: [], playerCount: 4, gameType: 'hanchan', playerIds: ['a', 'b', 'c', 'd'], scores: [38200, 27600, 21400, 12800], createdAt: '' };
+    window.localStorage.setItem(
+      'mahjong.games',
+      JSON.stringify([
+        { ...base, id: 'oct', playedAt: '2026-10-31T23:59:00+09:00', rules: OLD },
+        { ...base, id: 'nov', playedAt: '2026-11-01T00:00:00+09:00', rules: OLD },
+        { ...base, id: 'nov-tonpuu', playedAt: '2026-11-05T20:00:00+09:00', gameType: 'tonpuu', rules: { ...OLD, tonpuuUmaMultiplier: 1 } },
+        { ...base, id: 'custom', playedAt: '2026-11-05T20:00:00+09:00', rules: { ...DEFAULT_RULES, uma: [30, 10, -10, -30] } },
+      ]),
+    );
+    const byId = new Map((await new LocalStorageAdapter().listGames()).map((g) => [g.id, g]));
+    expect(byId.get('oct')?.rules.uma).toEqual([15, 5, -5, -15]);
+    expect(byId.get('nov')?.rules.uma).toEqual([20, 10, -10, -20]);
+    expect(byId.get('nov-tonpuu')?.rules).toMatchObject({ uma: [20, 10, -10, -20], tonpuuUmaMultiplier: 0.5 });
+    expect(byId.get('custom')?.rules.uma).toEqual([30, 10, -10, -30]);
+  });
+
   it('손대지 않은 예전 초기 멤버는 새 초기 멤버로 교체한다', async () => {
     const legacy = [
       { id: 'yeonkyung', name: '연경' },

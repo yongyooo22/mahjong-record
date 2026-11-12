@@ -21,6 +21,9 @@ import {
   yakumansOf,
 } from './stats';
 
+// 통계 계산 검사용으로 예전 우마(+15/+5/-5/-15)에 고정해 둡니다.
+const RULES = { ...DEFAULT_RULES, uma: [15, 5, -5, -15] as [number, number, number, number] };
+
 const members: Member[] = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
   id,
   name: id.toUpperCase(),
@@ -39,7 +42,7 @@ function game(id: string, playedAt: string, playerIds: string[], scores: number[
     scores,
     yakumans,
     createdAt: playedAt,
-    rules: DEFAULT_RULES,
+    rules: RULES,
   };
 }
 
