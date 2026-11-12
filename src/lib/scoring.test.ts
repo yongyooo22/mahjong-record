@@ -25,34 +25,36 @@ describe('computeRanks', () => {
 });
 
 describe('computePoints / 검산 예시', () => {
-  it('38,200점 1위 → +28.2', () => {
-    expect(computePoints(38200, 1, DEFAULT_RULES, 'hanchan')).toBe(28.2);
+  it('38,200점 1위 → +33.2', () => {
+    expect(computePoints(38200, 1, DEFAULT_RULES, 'hanchan')).toBe(33.2);
   });
 
-  it('38,200 / 27,600 / 21,400 / 12,800 → +28.2 / +7.6 / -8.6 / -27.2 (합계 0)', () => {
+  it('38,200 / 27,600 / 21,400 / 12,800 → +33.2 / +12.6 / -13.6 / -32.2 (합계 0)', () => {
     const results = computeResults([38200, 27600, 21400, 12800]);
-    expect(results.map((r) => r.points)).toEqual([28.2, 7.6, -8.6, -27.2]);
+    expect(results.map((r) => r.points)).toEqual([33.2, 12.6, -13.6, -32.2]);
     expect(results.map((r) => r.rank)).toEqual([1, 2, 3, 4]);
-    expect(results.map((r) => r.uma)).toEqual([15, 5, -5, -15]);
+    expect(results.map((r) => r.uma)).toEqual([20, 10, -10, -20]);
     expect(round1(results.reduce((a, r) => a + r.points, 0))).toBe(0);
   });
 
   it('입력 순서가 달라도 각 플레이어의 결과는 같다', () => {
     const results = computeResults([12800, 38200, 21400, 27600]);
-    expect(results.map((r) => r.points)).toEqual([-27.2, 28.2, -8.6, 7.6]);
+    expect(results.map((r) => r.points)).toEqual([-32.2, 33.2, -13.6, 12.6]);
     expect(results.map((r) => r.rank)).toEqual([4, 1, 3, 2]);
   });
 
   it('동풍전 배율이 우마에 적용된다', () => {
     const rules = { ...DEFAULT_RULES, tonpuuUmaMultiplier: 0.5 };
-    expect(umaForRank(1, rules, 'tonpuu')).toBe(7.5);
-    expect(umaForRank(1, rules, 'hanchan')).toBe(15);
-    expect(computePoints(38200, 1, rules, 'tonpuu')).toBe(20.7);
+    expect(umaForRank(1, rules, 'tonpuu')).toBe(10);
+    expect(umaForRank(2, rules, 'tonpuu')).toBe(5);
+    expect(umaForRank(4, rules, 'tonpuu')).toBe(-10);
+    expect(umaForRank(1, rules, 'hanchan')).toBe(20);
+    expect(computePoints(38200, 1, rules, 'tonpuu')).toBe(23.2);
   });
 
   it('반환점(오카)이 다르면 정산 점수가 달라진다', () => {
     const rules = { ...DEFAULT_RULES, returnPoints: 30000 };
-    expect(computePoints(38200, 1, rules, 'hanchan')).toBe(23.2);
+    expect(computePoints(38200, 1, rules, 'hanchan')).toBe(28.2);
   });
 
   it('동점 플래그를 표시한다', () => {
