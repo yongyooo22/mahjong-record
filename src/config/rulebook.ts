@@ -108,7 +108,7 @@ export const RULES_AFTER_SCORING: RuleSection[] = [
   },
   {
     id: 'house',
-    title: '기본 룰',
+    title: '세부 룰',
     groups: [
       {
         title: '대국 진행',
