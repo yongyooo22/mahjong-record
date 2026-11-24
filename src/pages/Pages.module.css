@@ -165,6 +165,8 @@
 }
 
 .kv strong {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -689,6 +691,8 @@
 }
 
 .ruleList {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   margin: 0;
   padding-left: 1.2em;
   display: grid;
@@ -698,6 +702,8 @@
 }
 
 .ruleChanges {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -715,4 +721,52 @@
 .ruleChanges strong {
   font-size: 12.5px;
   color: var(--green);
+}
+
+.ruleCard {
+  scroll-margin-top: 12px;
+}
+
+.ruleShortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ruleShortcut {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ruleShortcut:active {
+  background: var(--ivory);
+}
+
+.ruleSectionNote {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--ivory);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.ruleLabel {
+  color: var(--green);
+  margin-right: 2px;
+}
+
+.ruleListAfterKv {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
