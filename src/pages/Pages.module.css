@@ -751,6 +751,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+.rbGroup + .rbGroup {
+  margin-top: 16px;
+}
+
+.rbGroup h4 {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-top: 1.5px solid var(--text);
+  border-bottom: 1px solid var(--line);
+  background: var(--ivory);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
 .rbTable {
   margin: 0;
   border-top: 1.5px solid var(--text);
