@@ -839,3 +839,18 @@
   font-size: 15px;
   font-weight: 800;
 }
+
+/* 사용역: 멘젠일 때만 인정(초록), 멘젠이 아니면 1판 감소(주황). 색을 못 가려도 굵기와 밝기로 구분됩니다. */
+.yakuMenzen,
+.yakuDown {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.yakuMenzen {
+  color: var(--green);
+}
+
+.yakuDown {
+  color: #b9560f;
+}

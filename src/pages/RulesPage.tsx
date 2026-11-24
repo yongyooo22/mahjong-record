@@ -31,9 +31,19 @@ function scrollToArticle(id: string) {
   document.getElementById(`rule-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/** ◎·※ 표시가 줄 끝에 혼자 남지 않게 뒤 낱말과 붙입니다 (U+2060 은 줄바꿈을 막는 보이지 않는 글자). */
-function keepMarks(text: string): string {
-  return text.replace(/([◎※])(?=\S)/g, '$1\u2060');
+const MARK_CLASS: Record<string, string> = { '◎': s.yakuMenzen, '※': s.yakuDown };
+
+/** 낱말 앞의 ◎·※ 를 지우고 그 낱말(다음 빈칸이나 쉼표 앞까지)에 색을 입힙니다. */
+function colorMarks(text: string): ReactNode[] {
+  return text.split(/([◎※][^\s,]+)/).map((part, i) =>
+    MARK_CLASS[part[0]] ? (
+      <span key={i} className={MARK_CLASS[part[0]]}>
+        {part.slice(1)}
+      </span>
+    ) : (
+      part
+    ),
+  );
 }
 
 function RuleTable({ rows }: { rows: RuleRow[] }) {
@@ -42,7 +52,7 @@ function RuleTable({ rows }: { rows: RuleRow[] }) {
       {rows.map((row) => (
         <div key={row.label}>
           <dt>{row.label}</dt>
-          <dd>{keepMarks(row.text)}</dd>
+          <dd>{colorMarks(row.text)}</dd>
         </div>
       ))}
     </dl>
@@ -75,7 +85,7 @@ function Article({ id, no, title, children }: { id: string; no: string; title: s
 function SectionBody({ section }: { section: RuleSection }) {
   return (
     <>
-      {section.lead && <p className={s.rbLead}>{section.lead}</p>}
+      {section.lead && <p className={s.rbLead}>{colorMarks(section.lead)}</p>}
       {section.rows && <RuleTable rows={section.rows} />}
       {section.items && <RuleItems items={section.items} />}
       {section.groups?.map((group) => (
