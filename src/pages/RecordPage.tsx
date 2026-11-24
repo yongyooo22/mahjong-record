@@ -450,7 +450,7 @@ function RecordForm({ editing }: { editing?: Game }) {
             <div className={[s.notice, s.noticeWarn].join(' ')}>
               <AlertTriangle size={16} />
               <div>
-                <strong>동점이 있어요.</strong> 기본은 위쪽(먼저 입력한) 사람이 상위예요. 순위를 바꾸려면 아래 버튼으로 순서를 조정해 주세요.
+                <strong>동점이 있어요.</strong> 규칙상 기가에서 가까운 사람이 상위예요. 지금은 위쪽(먼저 입력한) 사람이 상위니, 다르면 아래 버튼으로 순서를 바꿔 주세요.
                 <div className={s.noticeActions}>
                   {ties.flatMap((group) =>
                     group.slice(0, -1).map((a, k) => {
