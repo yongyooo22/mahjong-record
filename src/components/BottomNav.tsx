@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Home, UserRound, Users } from 'lucide-react';
+import { BarChart3, BookOpen, FileText, Home, UserRound, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import s from './ui.module.css';
 
@@ -8,6 +8,7 @@ const items = [
   { to: '/ranking', label: '랭킹', icon: BarChart3, end: false },
   { to: '/me', label: '내 기록', icon: UserRound, end: false },
   { to: '/members', label: '멤버', icon: Users, end: false },
+  { to: '/rules', label: '규칙', icon: BookOpen, end: false },
 ];
 
 export function BottomNav() {

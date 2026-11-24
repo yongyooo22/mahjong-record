@@ -160,6 +160,8 @@
 
 .kv span:first-child {
   color: var(--text-muted);
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .kv strong {
@@ -622,4 +624,95 @@
   justify-content: center;
   gap: 8px;
   padding: 8px 0 0;
+}
+
+/* 규칙 탭 */
+.ruleFormula span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.ruleFormula {
+  background: var(--ivory);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  font-weight: 800;
+  font-size: 14.5px;
+  line-height: 1.5;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.umaTable {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.umaRow {
+  display: grid;
+  grid-template-columns: 64px repeat(4, 1fr);
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.umaRow:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.umaHead {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.umaType {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.umaCell {
+  text-align: center;
+  font-weight: 800;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ruleNote {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.ruleList {
+  margin: 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.ruleChanges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.ruleChanges li {
+  display: grid;
+  gap: 2px;
+}
+
+.ruleChanges strong {
+  font-size: 12.5px;
+  color: var(--green);
 }
