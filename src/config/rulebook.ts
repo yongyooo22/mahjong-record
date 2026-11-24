@@ -1,7 +1,7 @@
 /**
  * 규칙 탭(룰북)의 글.
  * 정산 점수(기본 점수·우마·오카)는 rules.ts 의 DEFAULT_RULES 에서 자동으로 만들어지므로 여기에 쓰지 않습니다.
- * 모임 규칙을 더하려면 HOUSE_RULES 에 { title, items } 를 추가하세요. 정산 점수 아래에 순서대로 보입니다.
+ * 모임 규칙을 더하려면 HOUSE_RULES 에 { title, items } 를 추가하세요. 규칙 화면 맨 위(정산 점수 위)에 순서대로 보입니다.
  */
 export interface RuleSection {
   title: string;
@@ -9,7 +9,12 @@ export interface RuleSection {
 }
 
 /** 정산 점수 외의 모임 규칙 (예: 적도라, 쿠이탄, 매너) */
-export const HOUSE_RULES: RuleSection[] = [];
+export const HOUSE_RULES: RuleSection[] = [
+  {
+    title: '마작은 즐겁고 매너있게!!',
+    items: ['전탁 조작은 다음 오야가 해요.', '국 진행 중 자신의 패에 대해 이야기하는 건 조심..'],
+  },
+];
 
 export interface RuleChange {
   /** 'YYYY-MM' 또는 'YYYY-MM-DD' */

@@ -1,4 +1,4 @@
-import { BookOpen, Calculator, History, Medal } from 'lucide-react';
+import { Calculator, History, Medal, Smile } from 'lucide-react';
 import { Card, SectionHeader } from '../components/Card';
 import { PageHeader } from '../components/PageHeader';
 import { HOUSE_RULES, RULE_CHANGES } from '../config/rulebook';
@@ -24,6 +24,18 @@ export function RulesPage() {
     <>
       <PageHeader title="우리 규칙" />
       <div className={app.page}>
+        {/* 모임 규칙(매너 등)을 맨 위에 */}
+        {HOUSE_RULES.map((section) => (
+          <Card key={section.title}>
+            <SectionHeader icon={<Smile size={18} />} title={section.title} />
+            <ul className={s.ruleList}>
+              {section.items.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </Card>
+        ))}
+
         <Card>
           <SectionHeader icon={<Calculator size={18} />} title="정산 점수" />
           {/* 좁은 화면에서는 덩어리 사이에서만 줄을 바꿉니다. */}
@@ -83,17 +95,6 @@ export function RulesPage() {
             <strong>정산 점수의 합계 (랭킹 기준)</strong>
           </div>
         </Card>
-
-        {HOUSE_RULES.map((section) => (
-          <Card key={section.title}>
-            <SectionHeader icon={<BookOpen size={18} />} title={section.title} />
-            <ul className={s.ruleList}>
-              {section.items.map((item, i) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </Card>
-        ))}
 
         {RULE_CHANGES.length > 0 && (
           <Card>
