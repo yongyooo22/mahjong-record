@@ -32,6 +32,16 @@ export const RULES_BEFORE_SCORING: RuleSection[] = [
     title: '대국 매너',
     items: ['전탁 조작은 다음 오야가 한다.', '국 진행 중에는 자신의 패에 대한 이야기를 삼간다.'],
   },
+];
+
+/** 최종 점수 계산 조에 덧붙는 항목 (기본 점수·우마는 자동) */
+export const SCORING_NOTES: string[] = [
+  '30,000점을 넘는 사람이 없으면 서입(동풍전은 남입)한다. 이후 30,000점을 넘는 사람이 나오면 즉시 종료하며, 북입(동풍전은 서입)은 하지 않는다.',
+  '대국 종료 후 남은 리치봉은 1위가 가진다.',
+];
+
+/** 순위 우마 뒤에 오는 조 */
+export const RULES_AFTER_SCORING: RuleSection[] = [
   {
     id: 'house',
     title: '기본 룰',
@@ -55,16 +65,6 @@ export const RULES_BEFORE_SCORING: RuleSection[] = [
       '대삼원, 대사희, 스깡쯔, 영상개화에는 파오(책임지불)를 적용한다. 쯔모 시에는 책임자가 100%, 론 시에는 책임자와 방총자가 50%씩 부담한다.',
     ],
   },
-];
-
-/** 최종 점수 계산 조에 덧붙는 항목 (기본 점수·우마는 자동) */
-export const SCORING_NOTES: string[] = [
-  '30,000점을 넘는 사람이 없으면 서입(동풍전은 남입)한다. 이후 30,000점을 넘는 사람이 나오면 즉시 종료하며, 북입(동풍전은 서입)은 하지 않는다.',
-  '대국 종료 후 남은 리치봉은 1위가 가진다.',
-];
-
-/** 순위 우마 뒤에 오는 조 */
-export const RULES_AFTER_SCORING: RuleSection[] = [
   {
     id: 'yaku',
     title: '사용역',
