@@ -81,6 +81,7 @@ function SectionBody({ section }: { section: RuleSection }) {
       {section.groups?.map((group) => (
         <div key={group.title} className={s.rbGroup}>
           <h4>{group.title}</h4>
+          {group.lead && <p className={s.rbLead}>{group.lead}</p>}
           <RuleItems items={group.items} />
         </div>
       ))}
