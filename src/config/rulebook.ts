@@ -5,7 +5,7 @@
  * 조 번호(제1조 …)는 화면에서 순서대로 붙으므로 글 안에 조 번호를 직접 쓰지 않습니다.
  */
 
-export const RULEBOOK_TITLE = '마작 고수 모임 룰';
+export const RULEBOOK_TITLE = '마작 고수들의 모임 규칙';
 export const RULEBOOK_MOTTO = '마작은 즐겁고 매너있게';
 
 export interface RuleRow {
